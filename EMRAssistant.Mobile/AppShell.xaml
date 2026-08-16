@@ -1,15 +1,14 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <Shell
     x:Class="EMRAssistant.Mobile.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:EMRAssistant.Mobile"
     xmlns:views="clr-namespace:EMRAssistant.Mobile.Views"
     Shell.FlyoutBehavior="Disabled">
 
-    <ShellContent
-        Title="Sign in"
-        ContentTemplate="{DataTemplate views:LoginPage}"
-        Route="LoginPage" />
+    <!-- Splash is first: it decides where the user actually goes. -->
+    <ShellContent Title="" ContentTemplate="{DataTemplate views:SplashPage}" Route="SplashPage" />
+    <ShellContent Title="Sign in" ContentTemplate="{DataTemplate views:LoginPage}" Route="LoginPage" />
+    <ShellContent Title="Home" ContentTemplate="{DataTemplate views:HomePage}" Route="HomePage" />
 
 </Shell>

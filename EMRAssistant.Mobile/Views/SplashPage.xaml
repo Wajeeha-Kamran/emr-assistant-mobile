@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EMRAssistant.Mobile.Views.SplashPage"
+             Shell.NavBarIsVisible="False"
+             Background="{StaticResource SplashGradient}">
+
+    <!--
+        The branded opening screen, and also the app's router: while it is
+        shown, it checks for a saved session and sends the user to Home or
+        Sign in. A splash that only waits is dead time; this one does the
+        work that would otherwise cause a flicker later.
+
+        ARTWORK: when the splash background is supplied, drop it into
+        Resources/Images as splash_bg.png and uncomment the Image below. The
+        gradient stays underneath as the fallback, so the screen is never blank.
+    -->
+
+    <Grid>
+
+        <!-- The gradient beneath stays as the fallback: a branded screen should
+             never degrade to blank if an image fails to load. -->
+        <Image Source="splash_bg.png" Aspect="AspectFill" />
+
+        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="14" Padding="32">
+
+            <!-- Replace with the logo mark when supplied: <Image Source="logo_mark.png" HeightRequest="120" /> -->
+            <Label Text="&#x039B;"
+                   FontSize="96"
+                   TextColor="{StaticResource BrandAccent}"
+                   HorizontalTextAlignment="Center" />
+
+            <Label x:Name="ProductLabel"
+                   FontSize="38"
+                   TextColor="White"
+                   HorizontalTextAlignment="Center" />
+
+            <Label x:Name="TaglineLabel"
+                   FontSize="15"
+                   TextColor="#C9B8E8"
+                   HorizontalTextAlignment="Center" />
+
+        </VerticalStackLayout>
+
+        <VerticalStackLayout VerticalOptions="End" Padding="32,0,32,44" Spacing="16">
+            <ActivityIndicator IsRunning="True" Color="{StaticResource BrandAccent}" HeightRequest="22" />
+            <Label x:Name="TrustLabel"
+                   FontSize="12.5"
+                   TextColor="#A796C4"
+                   HorizontalTextAlignment="Center" />
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

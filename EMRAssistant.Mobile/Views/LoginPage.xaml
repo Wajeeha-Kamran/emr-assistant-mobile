@@ -1,74 +1,124 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
              x:Class="EMRAssistant.Mobile.Views.LoginPage"
-             Title="Sign in"
-             BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource SurfaceMuted}">
+
+    <!--
+        Sign in.
+
+        Two items from the original design were removed because the backend
+        cannot honour them: "Continue with hospital SSO" (no SSO endpoint, and
+        real hospital SSO is a project of its own) and "Forgot password?" (no
+        password-reset endpoint, and building one needs email delivery). A
+        control that does nothing is worse than no control — it will be pressed
+        during a demonstration.
+
+        "Remember me" was kept because it is genuinely implementable: it decides
+        whether the token persists between launches.
+    -->
 
     <ScrollView>
-        <VerticalStackLayout Padding="28,48" Spacing="18" MaximumWidthRequest="420" HorizontalOptions="Center">
+        <Grid RowDefinitions="Auto,*">
 
-            <Label Text="EMR Assistant"
-                   FontSize="30"
-                   FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light=#0B3D5C, Dark=#7FB8DA}" />
+            <Grid Grid.Row="0" HeightRequest="300">
+                <Grid.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#EDE8F7" Offset="0.0" />
+                        <GradientStop Color="#DCD3F0" Offset="1.0" />
+                    </LinearGradientBrush>
+                </Grid.Background>
 
-            <Label Text="Sign in to record and document a consultation."
-                   FontSize="14"
-                   TextColor="{AppThemeBinding Light=#5A6B76, Dark=#9AA8B2}"
-                   Margin="0,-8,0,12" />
+                <Image Source="login_hero.png" Aspect="AspectFill" />
 
-            <Entry x:Name="EmailEntry"
-                   Placeholder="Email address"
-                   Keyboard="Email"
-                   ReturnType="Next" />
+                <!-- The brand sits over the artwork, top left, as in the design. -->
+                <HorizontalStackLayout HorizontalOptions="Start"
+                                       VerticalOptions="Start"
+                                       Margin="24,28,0,0"
+                                       Spacing="10">
+                    <Label Text="&#x039B;" FontSize="34" TextColor="{StaticResource BrandPurple}" VerticalOptions="Center" />
+                    <Label x:Name="BrandLabel"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource BrandInk}"
+                           VerticalOptions="Center" />
+                </HorizontalStackLayout>
+            </Grid>
 
-            <Entry x:Name="PasswordEntry"
-                   Placeholder="Password"
-                   IsPassword="True"
-                   ReturnType="Go"
-                   Completed="OnLoginClicked" />
+            <!-- The card overlaps the hero, as in the design -->
+            <Border Grid.Row="1"
+                    Style="{StaticResource GlassCard}"
+                    Margin="18,-42,18,24"
+                    MaximumWidthRequest="460"
+                    HorizontalOptions="Center">
 
-            <!-- Only used when registering. Hidden until the user asks for it,
-                 so the common case stays a two-field form. -->
-            <Entry x:Name="FullNameEntry"
-                   Placeholder="Full name"
-                   IsVisible="False" />
+                <VerticalStackLayout Spacing="16">
 
-            <Button x:Name="PrimaryButton"
-                    Text="Sign in"
-                    Clicked="OnLoginClicked"
-                    BackgroundColor="#0B3D5C"
-                    TextColor="White"
-                    HeightRequest="48" />
+                    <Label Text="Welcome back, Doctor" Style="{StaticResource DisplayTitle}" FontSize="26" />
+                    <Label Text="Sign in to continue your clinical documentation."
+                           Style="{StaticResource Subtitle}"
+                           Margin="0,-8,0,8" />
 
-            <Button x:Name="ToggleModeButton"
-                    Text="Create an account instead"
-                    Clicked="OnToggleModeClicked"
-                    BackgroundColor="Transparent"
-                    TextColor="{AppThemeBinding Light=#0B3D5C, Dark=#7FB8DA}"
-                    HeightRequest="40" />
+                    <Label Text="Work email" Style="{StaticResource FieldLabel}" />
+                    <controls:IconEntry x:Name="EmailField"
+                                        Icon="&#x2709;"
+                                        Placeholder="name@clinic.com"
+                                        KeyboardType="Email" />
 
-            <ActivityIndicator x:Name="Busy"
-                               IsRunning="False"
-                               IsVisible="False"
-                               HorizontalOptions="Center" />
+                    <Label Text="Password" Style="{StaticResource FieldLabel}" />
+                    <controls:IconEntry x:Name="PasswordField"
+                                        Icon="&#x1F512;"
+                                        Placeholder="Enter your password"
+                                        IsPassword="True"
+                                        Completed="OnSignInClicked" />
 
-            <Frame x:Name="MessageFrame"
-                   IsVisible="False"
-                   Padding="14"
-                   CornerRadius="8"
-                   BorderColor="Transparent">
-                <Label x:Name="MessageLabel" FontSize="14" LineBreakMode="WordWrap" />
-            </Frame>
+                    <HorizontalStackLayout Spacing="4" Margin="0,2,0,4">
+                        <CheckBox x:Name="RememberMe"
+                                  IsChecked="True"
+                                  Color="{StaticResource BrandPurple}"
+                                  VerticalOptions="Center" />
+                        <Label Text="Keep me signed in"
+                               FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
 
-            <Label Text="{Binding ServerAddress}"
-                   x:Name="ServerLabel"
-                   FontSize="11"
-                   HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light=#8A99A4, Dark=#6A7882}"
-                   Margin="0,20,0,0" />
+                    <Button x:Name="SignInButton"
+                            Text="Sign in securely"
+                            Style="{StaticResource PrimaryButton}"
+                            Clicked="OnSignInClicked" />
 
-        </VerticalStackLayout>
+                    <ActivityIndicator x:Name="Busy"
+                                       IsRunning="False"
+                                       IsVisible="False"
+                                       Color="{StaticResource BrandPurple}" />
+
+                    <Border x:Name="MessageCard" Style="{StaticResource MessageCard}" IsVisible="False">
+                        <Label x:Name="MessageLabel" FontSize="14" LineBreakMode="WordWrap" />
+                    </Border>
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,6,0,0">
+                        <Label x:Name="NewHereLabel" Style="{StaticResource Subtitle}" FontSize="14" />
+                        <Label Text="Create an account" Style="{StaticResource LinkLabel}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCreateAccountTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,10,0,0">
+                        <Label Text="&#x1F6E1;" FontSize="12" TextColor="{StaticResource TextMuted}" />
+                        <Label x:Name="AccessNoticeLabel" Style="{StaticResource FootnoteLabel}" />
+                    </HorizontalStackLayout>
+
+                    <!-- Shows which host the app is calling. Turns "it doesn't work"
+                         into "it is pointed at the wrong machine" instantly. -->
+                    <Label x:Name="ServerLabel" Style="{StaticResource FootnoteLabel}" FontSize="10.5" Margin="0,4,0,0" />
+
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </ScrollView>
 </ContentPage>

@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EMRAssistant.Mobile.Views.HomePage"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource SurfaceMuted}">
+
+    <!--
+        Placeholder for the consultation list. It exists so sign-in has
+        somewhere real to land and so the session actually persists across
+        launches — a login screen that logs into nothing proves less than it
+        appears to.
+
+        Next: list the doctor's sessions, and a button to start a new
+        consultation.
+    -->
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24,40" Spacing="18" MaximumWidthRequest="520" HorizontalOptions="Center">
+
+            <Label x:Name="GreetingLabel" Style="{StaticResource DisplayTitle}" FontSize="26" HorizontalTextAlignment="Start" />
+            <Label x:Name="SubLabel" Style="{StaticResource Subtitle}" HorizontalTextAlignment="Start" Margin="0,-8,0,0" />
+
+            <Border Style="{StaticResource GlassCard}" Padding="22" Margin="0,12,0,0">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="No consultations yet" FontSize="17" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
+                    <Label Text="Recording, transcription and SOAP drafting are the next screens to be built."
+                           Style="{StaticResource Subtitle}"
+                           HorizontalTextAlignment="Start" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Sign out"
+                    Style="{StaticResource GhostButton}"
+                    Clicked="OnSignOutClicked"
+                    Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

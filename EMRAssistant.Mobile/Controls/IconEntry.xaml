@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    A text field with a leading icon and an optional trailing button.
+
+    MAUI's Entry has no icon slot, so the usual approach is a bordered row
+    holding the icon and the entry together. Building it once as a control keeps
+    every field in the app identical and means a change to field styling happens
+    in one file.
+
+    Icons are drawn as text from a glyph font rather than images: sharp at any
+    density, recolourable, and nothing to export or manage.
+-->
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+        x:Class="EMRAssistant.Mobile.Controls.IconEntry"
+        x:Name="Root"
+        BackgroundColor="White"
+        Stroke="{StaticResource FieldBorder}"
+        StrokeThickness="1"
+        Padding="14,2"
+        HeightRequest="54">
+
+    <Border.StrokeShape>
+        <RoundRectangle CornerRadius="12" />
+    </Border.StrokeShape>
+
+    <Grid ColumnDefinitions="24,*,Auto" ColumnSpacing="10" VerticalOptions="Center">
+
+        <Label x:Name="LeadingIcon"
+               Grid.Column="0"
+               Text="{Binding Icon, Source={x:Reference Root}}"
+               FontSize="17"
+               TextColor="{StaticResource TextMuted}"
+               VerticalOptions="Center"
+               HorizontalOptions="Center" />
+
+        <Entry x:Name="Field"
+               Grid.Column="1"
+               Placeholder="{Binding Placeholder, Source={x:Reference Root}}"
+               PlaceholderColor="{StaticResource TextMuted}"
+               TextColor="{StaticResource TextPrimary}"
+               FontSize="15"
+               BackgroundColor="Transparent"
+               VerticalOptions="Center"
+               TextChanged="OnTextChanged"
+               Completed="OnCompleted" />
+
+        <!-- Password visibility toggle. Hidden unless the field is a password. -->
+        <Label x:Name="RevealToggle"
+               Grid.Column="2"
+               Text="&#x1F441;"
+               FontSize="16"
+               TextColor="{StaticResource TextMuted}"
+               VerticalOptions="Center"
+               IsVisible="False">
+            <Label.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnToggleReveal" />
+            </Label.GestureRecognizers>
+        </Label>
+
+    </Grid>
+</Border>

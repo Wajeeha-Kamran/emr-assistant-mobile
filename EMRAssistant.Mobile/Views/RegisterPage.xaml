@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
+             x:Class="EMRAssistant.Mobile.Views.RegisterPage"
+             Title="Create account"
+             BackgroundColor="{StaticResource SurfaceMuted}">
+
+    <!--
+        Registration is a separate screen because it needs a field sign-in does
+        not: the doctor's full name, which the API requires. Adding it to the
+        sign-in form would make the common path worse to serve the rare one.
+    -->
+
+    <ScrollView>
+        <Border Style="{StaticResource GlassCard}"
+                Margin="18,28"
+                MaximumWidthRequest="460"
+                HorizontalOptions="Center"
+                VerticalOptions="Start">
+
+            <VerticalStackLayout Spacing="16">
+
+                <Label Text="Create your account" Style="{StaticResource DisplayTitle}" FontSize="24" />
+                <Label Text="For clinicians documenting their own consultations."
+                       Style="{StaticResource Subtitle}"
+                       Margin="0,-8,0,8" />
+
+                <Label Text="Full name" Style="{StaticResource FieldLabel}" />
+                <controls:IconEntry x:Name="NameField" Icon="&#x1F464;" Placeholder="Dr Jane Smith" />
+
+                <Label Text="Work email" Style="{StaticResource FieldLabel}" />
+                <controls:IconEntry x:Name="EmailField" Icon="&#x2709;" Placeholder="name@clinic.com" KeyboardType="Email" />
+
+                <Label Text="Password" Style="{StaticResource FieldLabel}" />
+                <controls:IconEntry x:Name="PasswordField" Icon="&#x1F512;" Placeholder="Choose a password" IsPassword="True" />
+
+                <Label Text="At least 8 characters." Style="{StaticResource FootnoteLabel}" HorizontalTextAlignment="Start" Margin="2,-8,0,0" />
+
+                <Button x:Name="CreateButton"
+                        Text="Create account"
+                        Style="{StaticResource PrimaryButton}"
+                        Clicked="OnCreateClicked" />
+
+                <ActivityIndicator x:Name="Busy" IsRunning="False" IsVisible="False" Color="{StaticResource BrandPurple}" />
+
+                <Border x:Name="MessageCard" Style="{StaticResource MessageCard}" IsVisible="False">
+                    <Label x:Name="MessageLabel" FontSize="14" LineBreakMode="WordWrap" />
+                </Border>
+
+                <Button Text="I already have an account"
+                        Style="{StaticResource GhostButton}"
+                        Clicked="OnBackToSignInClicked" />
+
+            </VerticalStackLayout>
+        </Border>
+    </ScrollView>
+</ContentPage>

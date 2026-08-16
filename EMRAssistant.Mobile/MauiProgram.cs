@@ -24,7 +24,10 @@ namespace EMRAssistant.Mobile
 
             // Pages are transient: a fresh instance each time one is shown, with
             // its dependencies supplied by the container.
+            builder.Services.AddTransient<SplashPage>();
             builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<RegisterPage>();
+            builder.Services.AddTransient<HomePage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

@@ -53,7 +53,12 @@ public class ApiClient
     /// password flow so the interactive API docs can authorise directly. The
     /// "username" field takes the doctor's EMAIL address.
     /// </summary>
-    public async Task LoginAsync(string email, string password)
+    /// <param name="rememberMe">
+    /// When false the token is kept in memory only, so closing the app signs the
+    /// user out. On a shared or clinic device that is the safer default, which is
+    /// why it is a real setting rather than decoration.
+    /// </param>
+    public async Task LoginAsync(string email, string password, bool rememberMe = true)
     {
         var form = new FormUrlEncodedContent(new[]
         {
@@ -91,10 +96,19 @@ public class ApiClient
         _token = token;
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        // SecureStorage, not Preferences. Preferences is plain text on disk, and
-        // this token grants access to clinical records.
-        try { await SecureStorage.Default.SetAsync(TokenKey, token); }
-        catch { /* unavailable on some platforms; the in-memory token still works */ }
+        if (rememberMe)
+        {
+            // SecureStorage, not Preferences. Preferences is plain text on disk,
+            // and this token grants access to clinical records.
+            try { await SecureStorage.Default.SetAsync(TokenKey, token); }
+            catch { /* unavailable on some platforms; the in-memory token still works */ }
+        }
+        else
+        {
+            // Clear anything a previous "keep me signed in" left behind, or the
+            // checkbox would have no effect on the second sign-in.
+            try { SecureStorage.Default.Remove(TokenKey); } catch { }
+        }
     }
 
     public async Task RegisterAsync(string email, string password, string fullName)
