@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -168,6 +168,90 @@ public class ApiClient
             payload.GetProperty("id").GetInt32(),
             payload.GetProperty("email").GetString() ?? "",
             payload.TryGetProperty("full_name", out var name) ? name.GetString() ?? "" : "");
+    }
+
+    // -- consultations -----------------------------------------------------
+
+    /// <summary>
+    /// Create a consultation session. Returns its id, which every later call in
+    /// the flow is keyed by.
+    /// </summary>
+    public async Task<int> CreateSessionAsync()
+    {
+        // The trailing slash is required: the route is declared as "/" under the
+        // "/api/v1/sessions" prefix. Without it the request is redirected, and a
+        // redirect drops the Authorization header on some platforms.
+        var response = await _http.PostAsync("/api/v1/sessions/", null);
+        await ThrowIfFailedAsync(response);
+
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return payload.GetProperty("id").GetInt32();
+    }
+
+    // -- recovering consultations that did not finish ----------------------
+
+    /// <summary>
+    /// The consultations that are stuck, and what to do about each.
+    ///
+    /// Empty under normal use. This is the only endpoint that enumerates a
+    /// doctor's consultations, so without it an interrupted one cannot be
+    /// reached from the app at all.
+    /// </summary>
+    public async Task<AttentionList> GetAttentionAsync()
+    {
+        var response = await _http.GetAsync("/api/v1/attention");
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<AttentionList>()
+               ?? AttentionList.Empty;
+    }
+
+    /// <summary>
+    /// Re-run transcription for a session whose transcript failed or was
+    /// abandoned. Any segments already produced are replaced.
+    /// </summary>
+    public async Task RetryTranscriptionAsync(int sessionId)
+    {
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/transcript/retry", null);
+        await ThrowIfFailedAsync(response);
+    }
+
+    /// <summary>
+    /// Generate the SOAP draft for a session whose transcript is ready.
+    /// Slow -- the NLP pipeline runs inline, not in the background.
+    /// </summary>
+    public async Task GenerateNoteAsync(int sessionId)
+    {
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/soap-notes/generate", null);
+        await ThrowIfFailedAsync(response);
+    }
+
+    /// <summary>
+    /// Re-queue a failed push to the EMR.
+    ///
+    /// Returns once the job is QUEUED, not once it has succeeded -- poll
+    /// <see cref="GetSyncStatusAsync"/> for the outcome. A 409 means the note is
+    /// not in a failed state, usually because a sync is already in flight.
+    /// </summary>
+    public async Task RetrySyncAsync(int noteId)
+    {
+        var response = await _http.PostAsync($"/api/v1/soap-notes/{noteId}/retry-sync", null);
+        await ThrowIfFailedAsync(response);
+    }
+
+    /// <summary>
+    /// Current sync state: PENDING, SUCCESS or FAILED. Null before the note is
+    /// signed, because nothing has been queued yet.
+    /// </summary>
+    public async Task<string?> GetSyncStatusAsync(int noteId)
+    {
+        var response = await _http.GetAsync($"/api/v1/soap-notes/{noteId}/sync-status");
+        await ThrowIfFailedAsync(response);
+
+        var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return payload.TryGetProperty("sync_status", out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
     }
 
     // -- shared error handling ---------------------------------------------

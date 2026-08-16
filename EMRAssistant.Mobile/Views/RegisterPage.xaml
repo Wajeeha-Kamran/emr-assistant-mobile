@@ -2,57 +2,157 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
+             xmlns:behaviors="clr-namespace:EMRAssistant.Mobile.Behaviors"
              x:Class="EMRAssistant.Mobile.Views.RegisterPage"
-             Title="Create account"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource SurfaceMuted}">
 
     <!--
-        Registration is a separate screen because it needs a field sign-in does
-        not: the doctor's full name, which the API requires. Adding it to the
-        sign-in form would make the common path worse to serve the rare one.
+        Create account.
+
+        Built from the same structure as the sign-in screen rather than styled
+        to resemble it. Two screens that only look alike drift apart the first
+        time either is edited; two screens with the same skeleton stay aligned
+        because a change to the card, the hero or the type scale lands on both.
+
+        It carries one field sign-in does not — the doctor's full name, which
+        the API requires — and one the API does not know about: confirming the
+        password. A mistyped password on a form with no reset endpoint locks
+        someone out of an account they created seconds ago, so it is checked
+        here, where it can still be corrected.
+
+        Registration is not a use case in the SRS. It appears as the assumption
+        that "clinicians are authenticated and authorized" and as the UC-01
+        precondition that the doctor is logged in. A real deployment would have
+        accounts provisioned by the hospital rather than created here.
     -->
 
     <ScrollView>
-        <Border Style="{StaticResource GlassCard}"
-                Margin="18,28"
-                MaximumWidthRequest="460"
-                HorizontalOptions="Center"
-                VerticalOptions="Start">
+        <Grid RowDefinitions="Auto,*">
 
-            <VerticalStackLayout Spacing="16">
+            <!--
+                The hero spans BOTH rows so the artwork continues behind the
+                card, which is what makes the frosted panel read as glass.
+                Identical treatment to the sign-in screen.
+            -->
+            <Image Grid.Row="0" Grid.RowSpan="2"
+                   Source="login_hero.png"
+                   Aspect="AspectFill"
+                   VerticalOptions="Fill"
+                   Opacity="0.55" />
 
-                <Label Text="Create your account" Style="{StaticResource DisplayTitle}" FontSize="24" />
-                <Label Text="For clinicians documenting their own consultations."
-                       Style="{StaticResource Subtitle}"
-                       Margin="0,-8,0,8" />
+            <Grid Grid.Row="0" HeightRequest="290">
+                <Image Source="login_hero.png" Aspect="AspectFill" />
 
-                <Label Text="Full name" Style="{StaticResource FieldLabel}" />
-                <controls:IconEntry x:Name="NameField" Icon="&#x1F464;" Placeholder="Dr Jane Smith" />
+                <Image Source="logo_lockup_dark.png"
+                       Aspect="AspectFit"
+                       HeightRequest="46"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Start"
+                       Margin="22,26,0,0" />
+            </Grid>
 
-                <Label Text="Work email" Style="{StaticResource FieldLabel}" />
-                <controls:IconEntry x:Name="EmailField" Icon="&#x2709;" Placeholder="name@clinic.com" KeyboardType="Email" />
+            <Border Grid.Row="1"
+                    Style="{StaticResource GlassCard}"
+                    Margin="16,-60,16,28"
+                    MaximumWidthRequest="460"
+                    HorizontalOptions="Center">
 
-                <Label Text="Password" Style="{StaticResource FieldLabel}" />
-                <controls:IconEntry x:Name="PasswordField" Icon="&#x1F512;" Placeholder="Choose a password" IsPassword="True" />
+                <VerticalStackLayout Spacing="16">
 
-                <Label Text="At least 8 characters." Style="{StaticResource FootnoteLabel}" HorizontalTextAlignment="Start" Margin="2,-8,0,0" />
+                    <Label Text="Create your account"
+                           Style="{StaticResource DisplayTitle}"
+                           FontSize="26"
+                           Margin="0,10,0,0" />
+                    <Label Text="For clinicians documenting their own consultations."
+                           Style="{StaticResource Subtitle}"
+                           FontSize="12.5"
+                           Margin="0,-10,0,6" />
 
-                <Button x:Name="CreateButton"
-                        Text="Create account"
-                        Style="{StaticResource PrimaryButton}"
-                        Clicked="OnCreateClicked" />
+                    <Label Text="Full name" Style="{StaticResource FieldLabel}" />
+                    <controls:IconEntry x:Name="NameField"
+                                        Icon="{StaticResource IconUser}"
+                                        Placeholder="Dr Jane Smith" />
 
-                <ActivityIndicator x:Name="Busy" IsRunning="False" IsVisible="False" Color="{StaticResource BrandPurple}" />
+                    <Label Text="Work email" Style="{StaticResource FieldLabel}" />
+                    <controls:IconEntry x:Name="EmailField"
+                                        Icon="{StaticResource IconMail}"
+                                        Placeholder="name@clinic.com"
+                                        KeyboardType="Email" />
 
-                <Border x:Name="MessageCard" Style="{StaticResource MessageCard}" IsVisible="False">
-                    <Label x:Name="MessageLabel" FontSize="14" LineBreakMode="WordWrap" />
-                </Border>
+                    <Label Text="Password" Style="{StaticResource FieldLabel}" />
+                    <controls:IconEntry x:Name="PasswordField"
+                                        Icon="{StaticResource IconLock}"
+                                        Placeholder="Choose a password"
+                                        IsPassword="True" />
 
-                <Button Text="I already have an account"
-                        Style="{StaticResource GhostButton}"
-                        Clicked="OnBackToSignInClicked" />
+                    <Label Text="At least 8 characters."
+                           Style="{StaticResource FootnoteLabel}"
+                           FontSize="11.5"
+                           HorizontalTextAlignment="Start"
+                           Margin="2,-11,0,-5" />
 
-            </VerticalStackLayout>
-        </Border>
+                    <Label Text="Confirm password" Style="{StaticResource FieldLabel}" />
+                    <controls:IconEntry x:Name="ConfirmField"
+                                        Icon="{StaticResource IconLock}"
+                                        Placeholder="Type it again"
+                                        IsPassword="True"
+                                        Completed="OnCreateClicked" />
+
+                    <HorizontalStackLayout Spacing="4" Margin="0,-7,0,-7">
+                        <CheckBox x:Name="RememberMe"
+                                  IsChecked="True"
+                                  Color="{StaticResource BrandPurple}"
+                                  VerticalOptions="Center" />
+                        <Label Text="Keep me signed in"
+                               FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+
+                    <Button x:Name="CreateButton"
+                            Text="Create account"
+                            Style="{StaticResource PrimaryButton}"
+                            Clicked="OnCreateClicked">
+                        <Button.Behaviors>
+                            <behaviors:HoverScaleBehavior />
+                        </Button.Behaviors>
+                    </Button>
+
+                    <ActivityIndicator x:Name="Busy"
+                                       IsRunning="False"
+                                       IsVisible="False"
+                                       Color="{StaticResource BrandPurple}" />
+
+                    <Border x:Name="MessageCard" Style="{StaticResource MessageCard}" IsVisible="False">
+                        <Label x:Name="MessageLabel" FontSize="14" LineBreakMode="WordWrap" />
+                    </Border>
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,6,0,0">
+                        <Label Text="Already have an account?" Style="{StaticResource Subtitle}" FontSize="14" />
+                        <Label Text="Sign in" Style="{StaticResource LinkLabel}">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackToSignInTapped" />
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+
+                    <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,10,0,0">
+                        <Path Data="{StaticResource IconShield}"
+                              Stroke="{StaticResource SecureGreen}"
+                              StrokeThickness="1.5"
+                              Fill="#141F8A5B"
+                              Aspect="Uniform"
+                              WidthRequest="13"
+                              HeightRequest="13"
+                              VerticalOptions="Center" />
+                        <Label x:Name="AccessNoticeLabel" Style="{StaticResource FootnoteLabel}" />
+                    </HorizontalStackLayout>
+
+                    <Label x:Name="ServerLabel" Style="{StaticResource FootnoteLabel}" FontSize="10.5" Margin="0,4,0,0" />
+
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
     </ScrollView>
 </ContentPage>
