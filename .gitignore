@@ -1,0 +1,47 @@
+# Build output — regenerated on every build, never committed
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio working files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+
+# MAUI / Android build artefacts
+*.apk
+*.aab
+*.ipa
+*.app
+Platforms/Android/Resources/Resource.designer.cs
+
+# Publish output
+[Pp]ublish/
+*.[Pp]ublish.xml
+*.pubxml
+*.pubxml.user
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Secrets — nothing sensitive should ever be committed. If a real API key or
+# signing certificate is ever added to this project, it goes in a file matched
+# here, never in source.
+appsettings.Development.json
+*.keystore
+*.jks
+secrets.json

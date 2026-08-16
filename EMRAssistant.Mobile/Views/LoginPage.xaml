@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EMRAssistant.Mobile.Views.LoginPage"
+             Title="Sign in"
+             BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1A1A1A}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="28,48" Spacing="18" MaximumWidthRequest="420" HorizontalOptions="Center">
+
+            <Label Text="EMR Assistant"
+                   FontSize="30"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#0B3D5C, Dark=#7FB8DA}" />
+
+            <Label Text="Sign in to record and document a consultation."
+                   FontSize="14"
+                   TextColor="{AppThemeBinding Light=#5A6B76, Dark=#9AA8B2}"
+                   Margin="0,-8,0,12" />
+
+            <Entry x:Name="EmailEntry"
+                   Placeholder="Email address"
+                   Keyboard="Email"
+                   ReturnType="Next" />
+
+            <Entry x:Name="PasswordEntry"
+                   Placeholder="Password"
+                   IsPassword="True"
+                   ReturnType="Go"
+                   Completed="OnLoginClicked" />
+
+            <!-- Only used when registering. Hidden until the user asks for it,
+                 so the common case stays a two-field form. -->
+            <Entry x:Name="FullNameEntry"
+                   Placeholder="Full name"
+                   IsVisible="False" />
+
+            <Button x:Name="PrimaryButton"
+                    Text="Sign in"
+                    Clicked="OnLoginClicked"
+                    BackgroundColor="#0B3D5C"
+                    TextColor="White"
+                    HeightRequest="48" />
+
+            <Button x:Name="ToggleModeButton"
+                    Text="Create an account instead"
+                    Clicked="OnToggleModeClicked"
+                    BackgroundColor="Transparent"
+                    TextColor="{AppThemeBinding Light=#0B3D5C, Dark=#7FB8DA}"
+                    HeightRequest="40" />
+
+            <ActivityIndicator x:Name="Busy"
+                               IsRunning="False"
+                               IsVisible="False"
+                               HorizontalOptions="Center" />
+
+            <Frame x:Name="MessageFrame"
+                   IsVisible="False"
+                   Padding="14"
+                   CornerRadius="8"
+                   BorderColor="Transparent">
+                <Label x:Name="MessageLabel" FontSize="14" LineBreakMode="WordWrap" />
+            </Frame>
+
+            <Label Text="{Binding ServerAddress}"
+                   x:Name="ServerLabel"
+                   FontSize="11"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#8A99A4, Dark=#6A7882}"
+                   Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
