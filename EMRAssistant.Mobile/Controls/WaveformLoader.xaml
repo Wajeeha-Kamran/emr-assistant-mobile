@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    An audio-waveform loading indicator: bars that rise and fall in sequence.
+
+    Used instead of a spinner because this application is about listening to a
+    consultation, and the mark itself contains a waveform. A rotating circle
+    says "working"; this says "listening", which is closer to what the system
+    actually does.
+
+    The bars are Borders rather than images so they can be recoloured from the
+    brand palette and animated without any asset work.
+-->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EMRAssistant.Mobile.Controls.WaveformLoader"
+             x:Name="Root">
+
+    <HorizontalStackLayout x:Name="BarRow"
+                           Spacing="5"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center">
+
+        <Border x:Name="Bar1" WidthRequest="3" HeightRequest="19" BackgroundColor="{StaticResource BrandAccent}" StrokeThickness="0">
+            <Border.StrokeShape><RoundRectangle CornerRadius="1.5" /></Border.StrokeShape>
+        </Border>
+        <Border x:Name="Bar2" WidthRequest="3" HeightRequest="19" BackgroundColor="{StaticResource BrandAccent}" StrokeThickness="0">
+            <Border.StrokeShape><RoundRectangle CornerRadius="1.5" /></Border.StrokeShape>
+        </Border>
+        <Border x:Name="Bar3" WidthRequest="3" HeightRequest="19" BackgroundColor="{StaticResource BrandAccent}" StrokeThickness="0">
+            <Border.StrokeShape><RoundRectangle CornerRadius="1.5" /></Border.StrokeShape>
+        </Border>
+        <Border x:Name="Bar4" WidthRequest="3" HeightRequest="19" BackgroundColor="{StaticResource BrandAccent}" StrokeThickness="0">
+            <Border.StrokeShape><RoundRectangle CornerRadius="1.5" /></Border.StrokeShape>
+        </Border>
+        <Border x:Name="Bar5" WidthRequest="3" HeightRequest="19" BackgroundColor="{StaticResource BrandAccent}" StrokeThickness="0">
+            <Border.StrokeShape><RoundRectangle CornerRadius="1.5" /></Border.StrokeShape>
+        </Border>
+
+    </HorizontalStackLayout>
+</ContentView>
