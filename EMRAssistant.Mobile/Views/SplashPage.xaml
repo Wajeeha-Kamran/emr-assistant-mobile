@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
              x:Class="EMRAssistant.Mobile.Views.SplashPage"
              Shell.NavBarIsVisible="False"
              Background="{StaticResource SplashGradient}">
@@ -22,28 +23,18 @@
              never degrade to blank if an image fails to load. -->
         <Image Source="splash_bg.png" Aspect="AspectFill" />
 
-        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="14" Padding="32">
-
-            <!-- Replace with the logo mark when supplied: <Image Source="logo_mark.png" HeightRequest="120" /> -->
-            <Label Text="&#x039B;"
-                   FontSize="96"
-                   TextColor="{StaticResource BrandAccent}"
-                   HorizontalTextAlignment="Center" />
-
-            <Label x:Name="ProductLabel"
-                   FontSize="38"
-                   TextColor="White"
-                   HorizontalTextAlignment="Center" />
-
-            <Label x:Name="TaglineLabel"
-                   FontSize="15"
-                   TextColor="#C9B8E8"
-                   HorizontalTextAlignment="Center" />
-
-        </VerticalStackLayout>
+        <!-- The vertical lockup carries both the mark and the tagline, so no
+             text labels are drawn here. Anything added would duplicate what is
+             already in the artwork. -->
+        <Image Source="logo_vertical.png"
+               Aspect="AspectFit"
+               HeightRequest="420"
+               VerticalOptions="Center"
+               HorizontalOptions="Center"
+               Margin="40,0" />
 
         <VerticalStackLayout VerticalOptions="End" Padding="32,0,32,44" Spacing="16">
-            <ActivityIndicator IsRunning="True" Color="{StaticResource BrandAccent}" HeightRequest="22" />
+            <controls:WaveformLoader x:Name="Loader" HeightRequest="22" />
             <Label x:Name="TrustLabel"
                    FontSize="12.5"
                    TextColor="#A796C4"

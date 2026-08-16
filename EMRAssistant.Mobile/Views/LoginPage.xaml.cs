@@ -11,7 +11,6 @@ public partial class LoginPage : ContentPage
         InitializeComponent();
         _api = api;
 
-        BrandLabel.Text = AppInfo.ProductName;
         NewHereLabel.Text = $"New to {AppInfo.ProductName}?";
         AccessNoticeLabel.Text = AppInfo.AccessNotice;
         ServerLabel.Text = $"Server: {ApiConfig.BaseUrl}";

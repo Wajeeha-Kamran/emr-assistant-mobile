@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
+             xmlns:behaviors="clr-namespace:EMRAssistant.Mobile.Behaviors"
              x:Class="EMRAssistant.Mobile.Views.LoginPage"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource SurfaceMuted}">
@@ -23,58 +24,68 @@
     <ScrollView>
         <Grid RowDefinitions="Auto,*">
 
-            <Grid Grid.Row="0" HeightRequest="300">
-                <Grid.Background>
-                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                        <GradientStop Color="#EDE8F7" Offset="0.0" />
-                        <GradientStop Color="#DCD3F0" Offset="1.0" />
-                    </LinearGradientBrush>
-                </Grid.Background>
+            <!--
+                The hero spans BOTH rows, so the artwork continues behind the
+                card. This is what makes the frosted panel read as glass: a
+                transparent surface over a flat colour just looks like a paler
+                flat colour. The card sits on top in row 1.
+            -->
+            <Image Grid.Row="0" Grid.RowSpan="2"
+                   Source="login_hero.png"
+                   Aspect="AspectFill"
+                   VerticalOptions="Fill"
+                   Opacity="0.55" />
 
+            <!-- The hero at full strength across the top; the faded copy
+                 behind the card continues it downward. -->
+            <Grid Grid.Row="0" HeightRequest="290">
                 <Image Source="login_hero.png" Aspect="AspectFill" />
 
-                <!-- The brand sits over the artwork, top left, as in the design. -->
-                <HorizontalStackLayout HorizontalOptions="Start"
-                                       VerticalOptions="Start"
-                                       Margin="24,28,0,0"
-                                       Spacing="10">
-                    <Label Text="&#x039B;" FontSize="34" TextColor="{StaticResource BrandPurple}" VerticalOptions="Center" />
-                    <Label x:Name="BrandLabel"
-                           FontSize="24"
-                           FontAttributes="Bold"
-                           TextColor="{StaticResource BrandInk}"
-                           VerticalOptions="Center" />
-                </HorizontalStackLayout>
+                <!-- The dark lockup is the variant intended for light
+                     backgrounds, which is what the hero artwork provides. -->
+                <Image Source="logo_lockup_dark.png"
+                       Aspect="AspectFit"
+                       HeightRequest="46"
+                       HorizontalOptions="Start"
+                       VerticalOptions="Start"
+                       Margin="22,26,0,0" />
             </Grid>
 
             <!-- The card overlaps the hero, as in the design -->
             <Border Grid.Row="1"
                     Style="{StaticResource GlassCard}"
-                    Margin="18,-42,18,24"
+                    Margin="16,-60,16,28"
                     MaximumWidthRequest="460"
                     HorizontalOptions="Center">
 
                 <VerticalStackLayout Spacing="16">
 
-                    <Label Text="Welcome back, Doctor" Style="{StaticResource DisplayTitle}" FontSize="26" />
+                    <!-- Poppins sits higher in its line box than the previous
+                         font, so the ascenders touched the card edge. The margin
+                         gives it room rather than relying on the card padding. -->
+                    <Label Text="Welcome back, Doctor"
+                           Style="{StaticResource DisplayTitle}"
+                           FontSize="26"
+                           Margin="0,10,0,0" />
                     <Label Text="Sign in to continue your clinical documentation."
                            Style="{StaticResource Subtitle}"
-                           Margin="0,-8,0,8" />
+                           FontSize="12.5"
+                           Margin="0,-10,0,6" />
 
                     <Label Text="Work email" Style="{StaticResource FieldLabel}" />
                     <controls:IconEntry x:Name="EmailField"
-                                        Icon="&#x2709;"
+                                        Icon="{StaticResource IconMail}"
                                         Placeholder="name@clinic.com"
                                         KeyboardType="Email" />
 
                     <Label Text="Password" Style="{StaticResource FieldLabel}" />
                     <controls:IconEntry x:Name="PasswordField"
-                                        Icon="&#x1F512;"
+                                        Icon="{StaticResource IconLock}"
                                         Placeholder="Enter your password"
                                         IsPassword="True"
                                         Completed="OnSignInClicked" />
 
-                    <HorizontalStackLayout Spacing="4" Margin="0,2,0,4">
+                    <HorizontalStackLayout Spacing="4" Margin="0,-7,0,-7">
                         <CheckBox x:Name="RememberMe"
                                   IsChecked="True"
                                   Color="{StaticResource BrandPurple}"
@@ -88,7 +99,11 @@
                     <Button x:Name="SignInButton"
                             Text="Sign in securely"
                             Style="{StaticResource PrimaryButton}"
-                            Clicked="OnSignInClicked" />
+                            Clicked="OnSignInClicked">
+                        <Button.Behaviors>
+                            <behaviors:HoverScaleBehavior />
+                        </Button.Behaviors>
+                    </Button>
 
                     <ActivityIndicator x:Name="Busy"
                                        IsRunning="False"
@@ -109,7 +124,14 @@
                     </HorizontalStackLayout>
 
                     <HorizontalStackLayout HorizontalOptions="Center" Spacing="6" Margin="0,10,0,0">
-                        <Label Text="&#x1F6E1;" FontSize="12" TextColor="{StaticResource TextMuted}" />
+                        <Path Data="{StaticResource IconShield}"
+                              Stroke="{StaticResource SecureGreen}"
+                              StrokeThickness="1.5"
+                              Fill="#141F8A5B"
+                              Aspect="Uniform"
+                              WidthRequest="13"
+                              HeightRequest="13"
+                              VerticalOptions="Center" />
                         <Label x:Name="AccessNoticeLabel" Style="{StaticResource FootnoteLabel}" />
                     </HorizontalStackLayout>
 

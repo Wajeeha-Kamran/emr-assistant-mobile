@@ -1,3 +1,5 @@
+using Microsoft.Maui.Controls.Shapes;
+
 namespace EMRAssistant.Mobile.Controls;
 
 public partial class IconEntry : Border
@@ -11,12 +13,12 @@ public partial class IconEntry : Border
     // -- bindable properties ------------------------------------------------
 
     public static readonly BindableProperty IconProperty =
-        BindableProperty.Create(nameof(Icon), typeof(string), typeof(IconEntry), "");
+        BindableProperty.Create(nameof(Icon), typeof(Geometry), typeof(IconEntry), null);
 
-    /// <summary>Glyph shown at the left of the field.</summary>
-    public string Icon
+    /// <summary>Vector icon shown at the left of the field. See Brand.xaml.</summary>
+    public Geometry? Icon
     {
-        get => (string)GetValue(IconProperty);
+        get => (Geometry?)GetValue(IconProperty);
         set => SetValue(IconProperty, value);
     }
 
@@ -90,8 +92,10 @@ public partial class IconEntry : Border
     private void OnToggleReveal(object sender, EventArgs e)
     {
         Field.IsPassword = !Field.IsPassword;
-        RevealToggle.TextColor = Field.IsPassword
-            ? (Color)Application.Current!.Resources["TextMuted"]
-            : (Color)Application.Current!.Resources["BrandPurpleLight"];
+
+        // Tint the icon to show the current state: muted when hidden, brand
+        // colour when the password is visible.
+        var key = Field.IsPassword ? "TextMuted" : "BrandPurpleLight";
+        RevealToggle.Stroke = new SolidColorBrush((Color)Application.Current!.Resources[key]);
     }
 }

@@ -10,7 +10,8 @@
 -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls">
 
     <!-- ============================================================ COLOURS -->
 
@@ -29,6 +30,10 @@
     <Color x:Key="TextMuted">#9A94A8</Color>
     <Color x:Key="FieldBorder">#DCD7E8</Color>
     <Color x:Key="FieldBorderFocused">#8B5CD6</Color>
+
+    <!-- Security accent. Green reads as "safe" almost universally in an
+         interface, which is the point of the access notice. -->
+    <Color x:Key="SecureGreen">#1F8A5B</Color>
 
     <!-- Feedback -->
     <Color x:Key="Success">#0F5132</Color>
@@ -55,32 +60,54 @@
     </LinearGradientBrush>
 
     <!-- ======================================================= TYPOGRAPHY -->
+    <!--
+        Poppins for headings, Inter for everything read for content.
+
+        Display type can afford personality; text a clinician reads for accuracy
+        should be as plain as possible. Inter was drawn for screens and holds up
+        at the small sizes the transcript and SOAP screens will need.
+    -->
+
+    <!-- Applies to every Label and Entry with no explicit family, so the whole
+         app moves off the platform default. Without this, the same screen
+         renders in Segoe UI on Windows, Roboto on Android and SF Pro on iOS. -->
+    <Style TargetType="Label">
+        <Setter Property="FontFamily" Value="InterRegular" />
+    </Style>
+
+    <Style TargetType="Entry">
+        <Setter Property="FontFamily" Value="InterRegular" />
+    </Style>
 
     <Style x:Key="DisplayTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="PoppinsSemiBold" />
         <Setter Property="FontSize" Value="30" />
-        <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
     </Style>
 
     <Style x:Key="Subtitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterRegular" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
     </Style>
 
     <Style x:Key="FieldLabel" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterMedium" />
         <Setter Property="FontSize" Value="13.5" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="Margin" Value="2,0,0,-4" />
     </Style>
 
     <Style x:Key="LinkLabel" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterMedium" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{StaticResource BrandPurpleLight}" />
     </Style>
 
     <Style x:Key="FootnoteLabel" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterRegular" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="TextColor" Value="{StaticResource TextMuted}" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
@@ -91,14 +118,38 @@
     <Style x:Key="PrimaryButton" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource ButtonGradient}" />
         <Setter Property="TextColor" Value="White" />
+        <Setter Property="FontFamily" Value="InterSemiBold" />
         <Setter Property="FontSize" Value="16" />
-        <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="HeightRequest" Value="54" />
         <Setter Property="CornerRadius" Value="14" />
         <Setter Property="BorderWidth" Value="0" />
+
+        <!--
+            Scale feedback is applied by HoverScaleBehavior rather than here.
+            A VisualState sets Scale instantly, which snaps; the behaviour
+            animates it. Only opacity, which reads acceptably as a step change,
+            is left to the state manager.
+        -->
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="Opacity" Value="1.0" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="Opacity" Value="0.5" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
     <Style x:Key="GhostButton" TargetType="Button">
+        <Setter Property="FontFamily" Value="InterMedium" />
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="TextColor" Value="{StaticResource BrandPurpleLight}" />
         <Setter Property="FontSize" Value="14" />
@@ -117,10 +168,42 @@
         — a platform-specific blur effect — would be a lot of code for a
         subtle gain.
     -->
+    <!--
+        Frosted glass, as far as it can be taken without a blur.
+
+        The first version used a near-opaque white fill, which reads as a plain
+        white panel rather than glass. Glass is legible because you can see
+        something through it, so this version is considerably more transparent
+        and uses a vertical gradient rather than a flat fill: brighter at the
+        top where light would catch, clearer lower down. The border is also
+        lighter at the top edge for the same reason.
+
+        This only looks like glass if there is something behind it. See the
+        login page, where the hero image now extends underneath the card.
+    -->
     <Style x:Key="GlassCard" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="#F7FFFFFF" />
-        <Setter Property="Stroke" Value="#33FFFFFF" />
-        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#E8FFFFFF" Offset="0.0" />
+                    <GradientStop Color="#CCFFFFFF" Offset="0.55" />
+                    <GradientStop Color="#DBFFFFFF" Offset="1.0" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <!-- A purple edge rather than a white one: it defines the card
+             against light artwork, and ties the panel to the brand. Kept low
+             in opacity so it reads as an edge, not an outline. -->
+        <Setter Property="Stroke">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#998B5CD6" Offset="0.0" />
+                    <GradientStop Color="#4D8B5CD6" Offset="0.5" />
+                    <GradientStop Color="#805B2E9D" Offset="1.0" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="StrokeThickness" Value="1.5" />
         <Setter Property="Padding" Value="26,32" />
         <Setter Property="StrokeShape">
             <Setter.Value>
@@ -144,5 +227,34 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- ============================================================ ICONS -->
+    <!--
+        Drawn as vector paths rather than emoji or an icon font. Emoji render
+        in colour at the platform's own weight, which clashes with a fine-lined
+        interface; an icon font would be another asset to ship. All are drawn on
+        a 24x24 grid and scaled with Aspect="Uniform".
+    -->
+    <shapes:PathGeometry x:Key="IconMail"
+        Figures="M2,5 L22,5 L22,19 L2,19 Z M2,5 L12,13.5 L22,5" />
+
+    <shapes:PathGeometry x:Key="IconLock"
+        Figures="M4.5,10.5 L19.5,10.5 L19.5,21 L4.5,21 Z M8,10.5 L8,7 A4,4 0 0 1 16,7 L16,10.5" />
+
+    <!--
+        Drawn taller than a typical eye glyph. The outline spans the full 24
+        units horizontally but only about 11 vertically, and Aspect="Uniform"
+        scales to the wider dimension, so a wide, flat path renders as a thin
+        sliver in a square box. Narrowing the width and increasing the height
+        brings the proportions closer to the intended shape.
+    -->
+    <shapes:PathGeometry x:Key="IconEye"
+        Figures="M3.2,12 C6.4,5.4 17.6,5.4 20.8,12 C17.6,18.6 6.4,18.6 3.2,12 Z M12,8.4 A3.6,3.6 0 1 1 11.99,8.4 Z" />
+
+    <shapes:PathGeometry x:Key="IconUser"
+        Figures="M12,11.5 A4.2,4.2 0 1 1 11.99,11.5 Z M3.8,21 C3.8,16.2 20.2,16.2 20.2,21" />
+
+    <shapes:PathGeometry x:Key="IconShield"
+        Figures="M12,2.5 L20,6 L20,12 C20,17 16,20.5 12,21.5 C8,20.5 4,17 4,12 L4,6 Z" />
 
 </ResourceDictionary>

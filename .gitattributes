@@ -1,0 +1,28 @@
+# Line endings.
+#
+# Without this file, git stores whatever bytes the working tree happens to
+# contain. A file rewritten by a different editor then shows as every line
+# changed. On 16 Aug 2026 `git status` listed 38 modified files here, of which
+# 11 had actually changed — the other 27, including every Platforms/ file and
+# the .sln, differed only by carriage returns.
+#
+# text=auto stores every text file with LF in the repository and checks it out
+# with the platform's own endings, so Visual Studio keeps working and the
+# history stays readable.
+* text=auto
+
+# Visual Studio rewrites these with CRLF whenever it touches them. Pinning the
+# checkout stops them reappearing as modified after every solution load.
+*.sln text eol=crlf
+*.csproj text eol=crlf
+
+*.cs text diff=csharp
+*.xaml text
+*.svg text
+
+# Never transformed.
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.otf binary

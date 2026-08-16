@@ -13,6 +13,24 @@ namespace EMRAssistant.Mobile
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
                 {
+                    // Poppins for display type: geometric and characterful, used
+                    // for headings where personality is wanted.
+                    fonts.AddFont("Poppins-SemiBold.ttf", "PoppinsSemiBold");
+                    fonts.AddFont("Poppins-Bold.ttf", "PoppinsBold");
+
+                    // Inter for everything a clinician actually reads. It was
+                    // designed for screens and stays legible at small sizes,
+                    // which matters most on the transcript and SOAP screens.
+                    //
+                    // The 18pt files are Inter's optical size intended for user
+                    // interface text; the 24pt and 28pt cuts are for large
+                    // display use and are not registered.
+                    fonts.AddFont("Inter_18pt-Regular.ttf", "InterRegular");
+                    fonts.AddFont("Inter_18pt-Medium.ttf", "InterMedium");
+                    fonts.AddFont("Inter_18pt-SemiBold.ttf", "InterSemiBold");
+
+                    // Retained: the template registers these and removing them
+                    // would break anything still referring to them.
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
@@ -32,6 +50,28 @@ namespace EMRAssistant.Mobile
 #if DEBUG
 		builder.Logging.AddDebug();
 #endif
+
+            // Remove the platform's own Entry border and background.
+            //
+            // Every Entry sits inside our own bordered container (IconEntry), so
+            // the native border draws a second outline within the first --
+            // visible as a box around the placeholder text. There is no
+            // cross-platform property for this; it has to be done per platform
+            // on the underlying control.
+            Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping(
+                "BorderlessEntry", (handler, view) =>
+                {
+#if WINDOWS
+                    handler.PlatformView.BorderThickness = new Microsoft.UI.Xaml.Thickness(0);
+                    handler.PlatformView.Background = null;
+                    handler.PlatformView.FocusVisualMargin = new Microsoft.UI.Xaml.Thickness(0);
+#elif ANDROID
+                    handler.PlatformView.Background = null;
+                    handler.PlatformView.SetBackgroundColor(Android.Graphics.Color.Transparent);
+#elif IOS || MACCATALYST
+                    handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
+#endif
+                });
 
             return builder.Build();
         }

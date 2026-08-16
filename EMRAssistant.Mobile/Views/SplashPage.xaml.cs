@@ -11,8 +11,8 @@ public partial class SplashPage : ContentPage
         InitializeComponent();
         _api = api;
 
-        ProductLabel.Text = AppInfo.ProductName;
-        TaglineLabel.Text = AppInfo.Tagline;
+        // The product name and tagline are part of logo_vertical.png, so only
+        // the trust line is set from code.
         TrustLabel.Text = AppInfo.TrustLine;
     }
 
@@ -20,11 +20,13 @@ public partial class SplashPage : ContentPage
     {
         base.OnAppearing();
 
+        Loader.Start();
+
         // Long enough for the branding to register and for the artwork to be
         // seen, short enough not to annoy someone opening the app for the
         // twentieth time. The session check below often finishes well inside
         // this window, so the delay is what sets the pace, not the network.
-        await Task.Delay(2600);
+        await Task.Delay(4000);
 
         var destination = "//LoginPage";
 
@@ -44,6 +46,7 @@ public partial class SplashPage : ContentPage
             }
         }
 
+        Loader.Stop();
         await Shell.Current.GoToAsync(destination);
     }
 }

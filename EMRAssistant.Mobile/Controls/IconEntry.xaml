@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <!--
     A text field with a leading icon and an optional trailing button.
 
@@ -26,13 +26,19 @@
 
     <Grid ColumnDefinitions="24,*,Auto" ColumnSpacing="10" VerticalOptions="Center">
 
-        <Label x:Name="LeadingIcon"
-               Grid.Column="0"
-               Text="{Binding Icon, Source={x:Reference Root}}"
-               FontSize="17"
-               TextColor="{StaticResource TextMuted}"
-               VerticalOptions="Center"
-               HorizontalOptions="Center" />
+        <Path x:Name="LeadingIcon"
+              Grid.Column="0"
+              Data="{Binding Icon, Source={x:Reference Root}}"
+              Stroke="{StaticResource BrandPurpleLight}"
+              StrokeThickness="1.6"
+              StrokeLineCap="Round"
+              StrokeLineJoin="Round"
+              Fill="Transparent"
+              Aspect="Uniform"
+              WidthRequest="19"
+              HeightRequest="19"
+              VerticalOptions="Center"
+              HorizontalOptions="Center" />
 
         <Entry x:Name="Field"
                Grid.Column="1"
@@ -46,17 +52,23 @@
                Completed="OnCompleted" />
 
         <!-- Password visibility toggle. Hidden unless the field is a password. -->
-        <Label x:Name="RevealToggle"
-               Grid.Column="2"
-               Text="&#x1F441;"
-               FontSize="16"
-               TextColor="{StaticResource TextMuted}"
-               VerticalOptions="Center"
-               IsVisible="False">
-            <Label.GestureRecognizers>
+        <Path x:Name="RevealToggle"
+              Grid.Column="2"
+              Data="{StaticResource IconEye}"
+              Stroke="{StaticResource TextMuted}"
+              StrokeThickness="1.5"
+              StrokeLineCap="Round"
+              StrokeLineJoin="Round"
+              Fill="Transparent"
+              Aspect="Uniform"
+              WidthRequest="19"
+              HeightRequest="19"
+              VerticalOptions="Center"
+              IsVisible="False">
+            <Path.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleReveal" />
-            </Label.GestureRecognizers>
-        </Label>
+            </Path.GestureRecognizers>
+        </Path>
 
     </Grid>
 </Border>
