@@ -40,4 +40,24 @@ public static class BrandPalette
 
     public static Brush Brush(string key, string fallbackHex)
         => new SolidColorBrush(Color(key, fallbackHex));
+
+    /// <summary>
+    /// A named Style from Brand.xaml, or null if it is not there.
+    ///
+    /// The same trap as the colours, and worse. Application.Current.Resources
+    /// is the top-level dictionary; the styles live in Brand.xaml, which is
+    /// merged into it. The indexer does not search merged dictionaries and
+    /// throws KeyNotFoundException, so ["GhostButton"] fails at runtime even
+    /// though {StaticResource GhostButton} in XAML resolves it — XAML walks the
+    /// merged dictionaries, the indexer does not. TryGetValue does.
+    ///
+    /// Returning null rather than throwing means a missing style renders an
+    /// unstyled control instead of taking down the screen.
+    /// </summary>
+    public static Style? LookupStyle(string key)
+        => Application.Current?.Resources is { } resources
+           && resources.TryGetValue(key, out var value)
+           && value is Style style
+            ? style
+            : null;
 }

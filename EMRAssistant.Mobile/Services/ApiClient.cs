@@ -232,6 +232,62 @@ public class ApiClient
         await ThrowIfFailedAsync(response);
     }
 
+    /// <summary>
+    /// The transcript and its speaker-labelled segments.
+    ///
+    /// Poll this while status is "processing". Transcription runs in the
+    /// background and is slower than real time on CPU, so a nine-minute
+    /// consultation takes several minutes.
+    /// </summary>
+    public async Task<Transcript> GetTranscriptAsync(int sessionId)
+    {
+        var response = await _http.GetAsync($"/api/v1/sessions/{sessionId}/transcript");
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<Transcript>()
+               ?? throw new ApiException("The transcript could not be read.");
+    }
+
+    /// <summary>The note and its four sections. 404 until it has been generated.</summary>
+    public async Task<SoapNote> GetSoapNoteAsync(int sessionId)
+    {
+        var response = await _http.GetAsync($"/api/v1/sessions/{sessionId}/soap-notes");
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<SoapNote>()
+               ?? throw new ApiException("The note could not be read.");
+    }
+
+    /// <summary>
+    /// Generate the draft. Returns the note.
+    ///
+    /// Slow: the NLP runs inline rather than in the background, so this request
+    /// can take 15 to 25 seconds. Refused if the transcript is not complete, or
+    /// if the note has already been signed.
+    /// </summary>
+    public async Task<SoapNote> GenerateSoapNoteAsync(int sessionId)
+    {
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/soap-notes/generate", null);
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<SoapNote>()
+               ?? throw new ApiException("The note could not be read.");
+    }
+
+    /// <summary>
+    /// Edit one section. Refused once the note is signed — that is the point of
+    /// signing.
+    /// </summary>
+    public async Task<SoapNote> UpdateSectionAsync(int noteId, int sectionId, string content)
+    {
+        var response = await _http.PatchAsJsonAsync(
+            $"/api/v1/soap-notes/{noteId}/sections/{sectionId}", new { content });
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<SoapNote>()
+               ?? throw new ApiException("The note could not be read.");
+    }
+
     // -- recovering consultations that did not finish ----------------------
 
     /// <summary>

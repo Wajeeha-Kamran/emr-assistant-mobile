@@ -301,11 +301,11 @@ public partial class RecordPage : ContentPage
             creep.Stop();
             UploadProgress.Progress = 1;
 
-            await DisplayAlert("Recording uploaded",
-                "Transcription has started. It runs in the background and takes roughly as long " +
-                "as the recording. The transcript screen is the next one to be built.", "OK");
-
-            await Shell.Current.GoToAsync("//HomePage");
+            // Straight on. UC-02 requires the draft to be produced "without
+            // manual triggering", so there is nothing to confirm here.
+            var stamp = $"{(int)length.TotalMinutes:00}:{length.Seconds:00}";
+            await Shell.Current.GoToAsync(
+                $"{nameof(ProcessingPage)}?sessionId={_sessionId.Value}&length={stamp}");
         }
         catch (Exception ex)
         {

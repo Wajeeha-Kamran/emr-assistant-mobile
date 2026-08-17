@@ -58,6 +58,8 @@ namespace EMRAssistant.Mobile
             builder.Services.AddTransient<LoginPage>();
             builder.Services.AddTransient<RegisterPage>();
             builder.Services.AddTransient<RecordPage>();
+            builder.Services.AddTransient<ProcessingPage>();
+            builder.Services.AddTransient<ReviewPage>();
 
             // The capture mechanism behind an interface, for the same reason
             // the backend puts Whisper behind an ASREngine protocol: it is the
