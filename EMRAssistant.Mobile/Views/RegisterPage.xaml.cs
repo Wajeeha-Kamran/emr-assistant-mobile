@@ -1,4 +1,4 @@
-using System.Net.Mail;
+﻿using System.Net.Mail;
 using EMRAssistant.Mobile.Services;
 
 namespace EMRAssistant.Mobile.Views;
@@ -123,8 +123,14 @@ public partial class RegisterPage : ContentPage
     private void ShowMessage(string text, bool isError)
     {
         MessageLabel.Text = text;
-        MessageLabel.TextColor = (Color)Application.Current!.Resources[isError ? "Danger" : "Success"];
-        MessageCard.BackgroundColor = (Color)Application.Current!.Resources[isError ? "DangerBg" : "SuccessBg"];
+        // Same reasoning as IconEntry: this runs precisely when something has
+        // already gone wrong, so it must not be able to fail as well.
+        MessageLabel.TextColor = isError
+            ? BrandPalette.Color("Danger", BrandPalette.Danger)
+            : BrandPalette.Color("Success", BrandPalette.Success);
+        MessageCard.BackgroundColor = isError
+            ? BrandPalette.Color("DangerBg", BrandPalette.DangerBg)
+            : BrandPalette.Color("SuccessBg", BrandPalette.SuccessBg);
         MessageCard.IsVisible = true;
     }
 

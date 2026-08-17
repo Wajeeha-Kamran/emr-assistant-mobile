@@ -60,9 +60,11 @@
 
                 <VerticalStackLayout Spacing="16">
 
-                    <!-- Poppins sits higher in its line box than the previous
-                         font, so the ascenders touched the card edge. The margin
-                         gives it room rather than relying on the card padding. -->
+                    <!-- The heading face sits high in its line box, so the
+                         ascenders touched the card edge. The margin gives it
+                         room rather than relying on the card padding. Checked
+                         again after the headings moved to Playfair Display,
+                         which sits higher still. -->
                     <Label Text="Welcome back, Doctor"
                            Style="{StaticResource DisplayTitle}"
                            FontSize="26"

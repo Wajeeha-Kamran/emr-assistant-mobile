@@ -1,4 +1,6 @@
-using Microsoft.Maui.Controls.Shapes;
+﻿using Microsoft.Maui.Controls.Shapes;
+
+using EMRAssistant.Mobile;
 
 namespace EMRAssistant.Mobile.Controls;
 
@@ -95,7 +97,13 @@ public partial class IconEntry : Border
 
         // Tint the icon to show the current state: muted when hidden, brand
         // colour when the password is visible.
-        var key = Field.IsPassword ? "TextMuted" : "BrandPurpleLight";
-        RevealToggle.Stroke = new SolidColorBrush((Color)Application.Current!.Resources[key]);
+        //
+        // Read through BrandPalette rather than indexing the resource
+        // dictionary directly. The indexer throws on a missing key, and a
+        // colour lookup should never be able to take down the screen someone
+        // is typing their password into.
+        RevealToggle.Stroke = Field.IsPassword
+            ? BrandPalette.Brush("TextMuted", BrandPalette.TextMuted)
+            : BrandPalette.Brush("BrandPurpleLight", BrandPalette.BrandPurpleLight);
     }
 }

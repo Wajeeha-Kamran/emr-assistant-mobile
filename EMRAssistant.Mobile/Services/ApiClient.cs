@@ -188,6 +188,50 @@ public class ApiClient
         return payload.GetProperty("id").GetInt32();
     }
 
+    /// <summary>INITIATED -> RECORDING. Called the moment the doctor presses Start.</summary>
+    public async Task StartRecordingAsync(int sessionId)
+    {
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/start-recording", null);
+        await ThrowIfFailedAsync(response);
+    }
+
+    /// <summary>
+    /// Uploads the audio and ends the recording.
+    ///
+    /// Returns once the file is stored and validated; transcription then runs
+    /// in the background. The 30-minute limit is enforced here, server-side,
+    /// AFTER the upload completes, which is why the client stops at 30:00 by
+    /// itself rather than relying on this.
+    /// </summary>
+    public async Task StopRecordingAsync(int sessionId, string filePath)
+    {
+        using var content = new MultipartFormDataContent();
+        await using var stream = File.OpenRead(filePath);
+        var file = new StreamContent(stream);
+
+        // audio/wav rather than the .wav extension's platform-dependent guess.
+        // The API accepts every spelling, but being explicit avoids relying on
+        // that.
+        file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("audio/wav");
+        content.Add(file, "file", Path.GetFileName(filePath));
+
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/stop-recording", content);
+        await ThrowIfFailedAsync(response);
+    }
+
+    /// <summary>
+    /// Closes a consultation abandoned before any audio was uploaded.
+    ///
+    /// Returns 409 once the session is STOPPED: by then the recording exists
+    /// and the consultation holds clinical content, so it must be completed or
+    /// recovered rather than abandoned.
+    /// </summary>
+    public async Task DiscardSessionAsync(int sessionId)
+    {
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/discard", null);
+        await ThrowIfFailedAsync(response);
+    }
+
     // -- recovering consultations that did not finish ----------------------
 
     /// <summary>

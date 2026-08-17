@@ -35,6 +35,27 @@
          interface, which is the point of the access notice. -->
     <Color x:Key="SecureGreen">#1F8A5B</Color>
 
+    <!--
+        Dashboard status tints.
+
+        Three levels, because the attention list holds three kinds of problem
+        and colour is what lets a doctor read the card without reading it. Amber
+        is "the machine stopped", purple is "your turn", red is "it did not
+        reach the EMR". Each is a pale tile with a saturated glyph, so five rows
+        stacked together stay calm rather than shouting.
+    -->
+    <Color x:Key="TileWarning">#FFF0E3</Color>
+    <Color x:Key="InkWarning">#E07B39</Color>
+
+    <Color x:Key="TileAccent">#EDE7FB</Color>
+    <Color x:Key="InkAccent">#5B2E9D</Color>
+
+    <Color x:Key="TileDanger">#FDE9E9</Color>
+    <Color x:Key="InkDanger">#E5484D</Color>
+
+    <Color x:Key="TileSecure">#E9F7F0</Color>
+    <Color x:Key="TileNotice">#EFEBFB</Color>
+
     <!-- Feedback -->
     <Color x:Key="Success">#0F5132</Color>
     <Color x:Key="SuccessBg">#D1E7DD</Color>
@@ -61,11 +82,16 @@
 
     <!-- ======================================================= TYPOGRAPHY -->
     <!--
-        Poppins for headings, Inter for everything read for content.
+        Playfair Display for headings, Inter for everything read for content.
 
         Display type can afford personality; text a clinician reads for accuracy
         should be as plain as possible. Inter was drawn for screens and holds up
         at the small sizes the transcript and SOAP screens will need.
+
+        The pairing is deliberate and one-directional: the serif never carries
+        clinical content. A transcript line or a SOAP section set in Playfair
+        would be harder to scan and would dress up text whose only job is to be
+        read exactly.
     -->
 
     <!-- Applies to every Label and Entry with no explicit family, so the whole
@@ -80,7 +106,7 @@
     </Style>
 
     <Style x:Key="DisplayTitle" TargetType="Label">
-        <Setter Property="FontFamily" Value="PoppinsSemiBold" />
+        <Setter Property="FontFamily" Value="PlayfairSemiBold" />
         <Setter Property="FontSize" Value="30" />
         <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
@@ -104,6 +130,41 @@
         <Setter Property="FontFamily" Value="InterMedium" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{StaticResource BrandPurpleLight}" />
+    </Style>
+
+    <!-- The hero line. Medium rather than Regular: at this size Playfair's
+         Regular reads as thin next to the solid gradient button beneath it. -->
+    <Style x:Key="DisplaySerif" TargetType="Label">
+        <Setter Property="FontFamily" Value="PlayfairMedium" />
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="HorizontalTextAlignment" Value="Start" />
+    </Style>
+
+    <Style x:Key="Greeting" TargetType="Label">
+        <Setter Property="FontFamily" Value="PlayfairBold" />
+        <Setter Property="FontSize" Value="25" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="HorizontalTextAlignment" Value="Start" />
+    </Style>
+
+    <Style x:Key="SectionTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="PlayfairSemiBold" />
+        <Setter Property="FontSize" Value="19" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+        <Setter Property="HorizontalTextAlignment" Value="Start" />
+    </Style>
+
+    <Style x:Key="RowTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterSemiBold" />
+        <Setter Property="FontSize" Value="14.5" />
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}" />
+    </Style>
+
+    <Style x:Key="RowMeta" TargetType="Label">
+        <Setter Property="FontFamily" Value="InterRegular" />
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}" />
     </Style>
 
     <Style x:Key="FootnoteLabel" TargetType="Label">
@@ -251,8 +312,50 @@
     <shapes:PathGeometry x:Key="IconEye"
         Figures="M3.2,12 C6.4,5.4 17.6,5.4 20.8,12 C17.6,18.6 6.4,18.6 3.2,12 Z M12,8.4 A3.6,3.6 0 1 1 11.99,8.4 Z" />
 
+    <!--
+        The shoulders are a flat-topped rounded shape, not a curve.
+
+        The first version drew them as a single shallow bezier
+        (C3.8,16.2 20.2,16.2 20.2,21), which dipped only five units below the
+        head. At 19px that reads as a circle with an unrelated line beneath it
+        rather than a person. Squaring the top of the shoulders and bringing
+        them up to meet the head gives the silhouette something to be
+        recognised by.
+    -->
     <shapes:PathGeometry x:Key="IconUser"
-        Figures="M12,11.5 A4.2,4.2 0 1 1 11.99,11.5 Z M3.8,21 C3.8,16.2 20.2,16.2 20.2,21" />
+        Figures="M12,3 A4,4 0 1 1 11.99,3 Z M20,21 L20,19 A4,4 0 0 0 16,15 L8,15 A4,4 0 0 0 4,19 L4,21" />
+
+    <shapes:PathGeometry x:Key="IconMic"
+        Figures="M9,6 A3,3 0 0 1 15,6 L15,12 A3,3 0 0 1 9,12 Z M5.5,11.5 C5.5,17.5 18.5,17.5 18.5,11.5 M12,17.8 L12,21 M8.5,21 L15.5,21" />
+
+    <!--
+        A waveform, not a warning triangle. The row says transcription failed,
+        and the icon should name the thing that failed rather than restate the
+        severity the colour already carries.
+    -->
+    <shapes:PathGeometry x:Key="IconWaveform"
+        Figures="M3,12 L6.5,12 L8,6.5 L9.5,17.5 L11,9 L12.5,15 L14,7 L15.5,16 L17,11 L21,11" />
+
+    <shapes:PathGeometry x:Key="IconWaveformClock"
+        Figures="M3,12 L5.5,12 L7,7 L8.5,17 L10,10.5 L11.5,14 L13,12 M18,13 A4,4 0 1 1 17.99,13 Z M18,14.7 L18,17 L19.9,18" />
+
+    <shapes:PathGeometry x:Key="IconDocument"
+        Figures="M6,3 L14,3 L18,7 L18,21 L6,21 Z M14,3 L14,7 L18,7 M9,12 L15,12 M9,16 L15,16" />
+
+    <shapes:PathGeometry x:Key="IconPen"
+        Figures="M5,17.2 L5.8,13.9 L15.6,4.1 A2.2,2.2 0 0 1 18.7,7.2 L8.9,17 Z M3.5,20.8 C7,19 10,22 13.5,20.3 C16,19.1 18,20 20.5,20.8" />
+
+    <shapes:PathGeometry x:Key="IconCloudSlash"
+        Figures="M18,10 L16.74,10 A8,8 0 1 0 9,20 L18,20 A5,5 0 0 0 18,10 Z M4.5,4.5 L19.5,19.5" />
+
+    <shapes:PathGeometry x:Key="IconShieldCheck"
+        Figures="M12,2.5 L20,6 L20,12 C20,17 16,20.5 12,21.5 C8,20.5 4,17 4,12 L4,6 Z M8.6,12.2 L11.2,14.8 L15.6,10.2" />
+
+    <shapes:PathGeometry x:Key="IconCheck"
+        Figures="M4,12.5 L9.5,18 L20,6.5" />
+
+    <shapes:PathGeometry x:Key="IconSignOut"
+        Figures="M9,4.5 L4.5,4.5 L4.5,19.5 L9,19.5 M11,12 L19.5,12 M16,8 L20,12 L16,16" />
 
     <shapes:PathGeometry x:Key="IconShield"
         Figures="M12,2.5 L20,6 L20,12 C20,17 16,20.5 12,21.5 C8,20.5 4,17 4,12 L4,6 Z" />

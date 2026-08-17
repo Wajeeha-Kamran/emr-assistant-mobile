@@ -1,40 +1,512 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
              x:Class="EMRAssistant.Mobile.Views.HomePage"
+             x:Name="Page"
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource SurfaceMuted}">
 
     <!--
-        Placeholder for the consultation list. It exists so sign-in has
-        somewhere real to land and so the session actually persists across
-        launches — a login screen that logs into nothing proves less than it
-        appears to.
+        The dashboard.
 
-        Next: list the doctor's sessions, and a button to start a new
-        consultation.
+        Two jobs, and deliberately no others: start a consultation, and surface
+        the ones that did not finish. There is no history list because the API
+        has no endpoint for one and no patient entity to label it with, so it
+        would be a list of numbers and timestamps with no clinical meaning.
+
+        The attention card is empty under normal use. It exists because a
+        consultation stuck at any stage keeps its audio on the server, and
+        retention deletes a recording only once its note is both signed and
+        synced. Finishing these is what stops recordings accumulating.
     -->
 
-    <ScrollView>
-        <VerticalStackLayout Padding="24,40" Spacing="18" MaximumWidthRequest="520" HorizontalOptions="Center">
+    <RefreshView x:Name="Refresher" Refreshing="OnRefreshing">
+        <ScrollView>
+            <VerticalStackLayout Padding="0" Spacing="0">
 
-            <Label x:Name="GreetingLabel" Style="{StaticResource DisplayTitle}" FontSize="26" HorizontalTextAlignment="Start" />
-            <Label x:Name="SubLabel" Style="{StaticResource Subtitle}" HorizontalTextAlignment="Start" Margin="0,-8,0,0" />
+                <!-- ================================================ HEADER -->
+                <!--
+                    A purple block bleeding to the top edge, which is why the
+                    page padding lives on the body stack below rather than on
+                    the whole page.
 
-            <Border Style="{StaticResource GlassCard}" Padding="22" Margin="0,12,0,0">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="No consultations yet" FontSize="17" FontAttributes="Bold" TextColor="{StaticResource TextPrimary}" />
-                    <Label Text="Recording, transcription and SOAP drafting are the next screens to be built."
-                           Style="{StaticResource Subtitle}"
-                           HorizontalTextAlignment="Start" />
+                    The Border paints the shape and holds no children. A Border
+                    clips its content to its StrokeShape, and this header
+                    contains an image sitting flush against the bottom edge, so
+                    the content goes beside the Border and layers over it.
+                -->
+                <Grid HeightRequest="252">
+
+                    <Border StrokeThickness="0" InputTransparent="True">
+                        <Border.Background>
+<!-- Light on the right, where the artwork is, falling away to
+                                 deep purple behind the logo and the greeting. A
+                                 highlight behind text is a highlight fighting the
+                                 text; behind the lungs it reads as the glow the
+                                 render already has. -->
+                            <LinearGradientBrush StartPoint="1,0" EndPoint="0,0.85">
+                                <GradientStop Color="#7B45CC" Offset="0.0" />
+                                <GradientStop Color="{StaticResource BrandPurple}" Offset="0.42" />
+                                <GradientStop Color="{StaticResource BrandDeep}" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="0,0,32,32" />
+                        </Border.StrokeShape>
+                    </Border>
+
+                    <!-- Top-aligned, with no bottom padding. The hero card overlaps
+                         this header by 40, so the lower strip is covered anyway;
+                         reserving space there only pushed everything down. There
+                         is no status bar on the desktop target, which is why 42
+                         of top padding read as a gap rather than as inset. -->
+                    <Grid RowDefinitions="Auto,*" Padding="20,18,20,0">
+
+                        <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+
+                            <Image Grid.Column="0"
+                                   Source="logo_lockup_white.png"
+                                   Aspect="AspectFit"
+                                   HeightRequest="30"
+                                   HorizontalOptions="Start"
+                                   VerticalOptions="Center" />
+
+                            <Path Grid.Column="1"
+                                  Data="{StaticResource IconSignOut}"
+                                  Stroke="White"
+                                  StrokeThickness="1.7"
+                                  StrokeLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  Aspect="Uniform"
+                                  WidthRequest="22"
+                                  HeightRequest="22"
+                                  VerticalOptions="Center">
+                                <Path.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnSignOutTapped" />
+                                </Path.GestureRecognizers>
+                            </Path>
+                        </Grid>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" VerticalOptions="Start">
+
+                            <VerticalStackLayout Grid.Column="0"
+                                                 Spacing="0"
+                                                 Margin="0,22,0,0"
+                                                 VerticalOptions="Start">
+                                <Label x:Name="SalutationLabel"
+                                       FontFamily="PlayfairMedium"
+                                       FontSize="17"
+                                       TextColor="#D9FFFFFF" />
+                                <Label x:Name="GreetingLabel"
+                                       FontFamily="PlayfairBold"
+                                       FontSize="25"
+                                       LineHeight="1.15"
+                                       TextColor="White"
+                                       Margin="0,2,0,0" />
+                                <Label x:Name="DateLabel"
+                                       FontFamily="InterRegular"
+                                       FontSize="13"
+                                       TextColor="#A6FFFFFF"
+                                       Margin="0,8,0,0" />
+                            </VerticalStackLayout>
+
+                            <Image Grid.Column="1"
+                                   Source="hero_lungs.png"
+                                   Aspect="AspectFit"
+                                   WidthRequest="138"
+                                   VerticalOptions="Start"
+                                   Margin="4,-6,-4,0" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+
+                <!-- ================================================== BODY -->
+
+                <VerticalStackLayout Padding="10,0,10,26"
+                                     Spacing="0"
+                                     MaximumWidthRequest="520"
+                                     HorizontalOptions="Center">
+
+                    <!-- ======================================== HERO CARD -->
+                    <!--
+                        Solid white, not frosted. Glass only reads when there is
+                        something behind it to see through; over the purple
+                        header this card is opaque by design, and translucency
+                        would just look like a dirty white panel.
+                    -->
+                    <Grid Margin="0,-40,0,0">
+
+                        <Border BackgroundColor="{StaticResource Surface}"
+                                StrokeThickness="0"
+                                InputTransparent="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="26" />
+                            </Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="#26241245" Offset="0,10" Radius="24" Opacity="0.6" />
+                            </Border.Shadow>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="0" Margin="20,22">
+
+                            <!-- LineHeight 1.35, not 1.18. Playfair's capitals reach
+                                 close to the top of its line box, so at a tight
+                                 line height the ascenders have nowhere to go and
+                                 the tops of S, A and C are shaved. -->
+                            <Label Text="Start A Consultation"
+                                   Style="{StaticResource DisplaySerif}"
+                                   FontFamily="PlayfairSemiBold"
+                                   FontSize="24"
+                                   LineHeight="1.35"
+                                   Margin="0,-3,0,0" />
+
+                            <Label Text="Record the visit. The note writes itself."
+                                   Style="{StaticResource Subtitle}"
+                                   FontSize="12.5"
+                                   HorizontalTextAlignment="Start"
+                                   Margin="0,7,0,0" />
+
+                            <!--
+                                The Border draws the shape; it does not contain
+                                the content. A Border clips its children to its
+                                StrokeShape, so any disagreement between measured
+                                and rendered height slices the tops off the
+                                glyphs. Making it an empty sibling underneath the
+                                content removes the clip entirely.
+                            -->
+                            <Grid x:Name="StartButton"
+                                  Margin="10,20,10,0"
+                                  HeightRequest="52">
+
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnStartConsultationTapped" />
+                                    <PointerGestureRecognizer PointerEntered="OnStartPointerEntered"
+                                                              PointerExited="OnStartPointerExited" />
+                                </Grid.GestureRecognizers>
+
+                                <Border StrokeThickness="0"
+                                        Background="{StaticResource ButtonGradient}"
+                                        InputTransparent="True">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="14" />
+                                    </Border.StrokeShape>
+                                    <Border.Shadow>
+                                        <Shadow Brush="#665B2E9D" Offset="0,6" Radius="14" Opacity="0.55" />
+                                    </Border.Shadow>
+                                </Border>
+
+                                <HorizontalStackLayout Spacing="11"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Fill"
+                                                       InputTransparent="True">
+                                    <Path Data="{StaticResource IconMic}"
+                                          Stroke="White"
+                                          StrokeThickness="1.7"
+                                          StrokeLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Fill="Transparent"
+                                          Aspect="Uniform"
+                                          WidthRequest="18"
+                                          HeightRequest="18"
+                                          VerticalOptions="Center" />
+                                    <!-- Fill plus VerticalTextAlignment rather than
+                                         Center: centring the label leaves it the
+                                         height the stack measured, which on a
+                                         semibold face is a point or two short and
+                                         shaves the tops of the letters. -->
+                                    <Label Text="Start recording"
+                                           FontFamily="InterSemiBold"
+                                           FontSize="15"
+                                           TextColor="White"
+                                           VerticalOptions="Fill"
+                                           VerticalTextAlignment="Center" />
+                                </HorizontalStackLayout>
+                            </Grid>
+
+                            <!-- Trust marker, not a control. Nothing happens
+                                 when it is pressed and nothing should. -->
+                            <Grid Margin="10,14,10,0" HeightRequest="34">
+                                <Border BackgroundColor="{StaticResource TileSecure}"
+                                        Stroke="#331F8A5B"
+                                        StrokeThickness="1"
+                                        InputTransparent="True">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10" />
+                                    </Border.StrokeShape>
+                                </Border>
+
+                                <HorizontalStackLayout Spacing="7"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center"
+                                                       InputTransparent="True">
+                                    <Path Data="{StaticResource IconShieldCheck}"
+                                          Stroke="{StaticResource SecureGreen}"
+                                          StrokeThickness="1.5"
+                                          StrokeLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Fill="#141F8A5B"
+                                          Aspect="Uniform"
+                                          WidthRequest="14"
+                                          HeightRequest="14"
+                                          VerticalOptions="Center" />
+                                    <Label Text="Secure clinical workspace"
+                                           FontFamily="InterMedium"
+                                           FontSize="11.5"
+                                           TextColor="{StaticResource SecureGreen}"
+                                           VerticalOptions="Center" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- ======================================= NEEDS ATTENTION -->
+
+                    <Label Text="Needs attention"
+                           Style="{StaticResource SectionTitle}"
+                           Margin="2,28,0,14" />
+
+                    <Border Padding="0"
+                            BackgroundColor="{StaticResource Surface}"
+                            Stroke="{StaticResource FieldBorder}"
+                            StrokeThickness="1">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="20" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="#14241245" Offset="0,5" Radius="14" Opacity="0.5" />
+                        </Border.Shadow>
+
+                        <VerticalStackLayout Spacing="0">
+
+                            <!-- Checking -->
+                            <VerticalStackLayout x:Name="LoadingView"
+                                                 Padding="24,30"
+                                                 Spacing="14"
+                                                 IsVisible="True">
+                                <controls:WaveformLoader HorizontalOptions="Center" Scale="0.7" />
+                                <Label Text="Checking your consultations"
+                                       Style="{StaticResource Subtitle}"
+                                       FontSize="13" />
+                            </VerticalStackLayout>
+
+                            <!-- Nothing stuck. Shown, never hidden: an all-clear
+                                 the doctor can see is worth more than a gap where
+                                 a card used to be. -->
+                            <VerticalStackLayout x:Name="EmptyView"
+                                                 Padding="24,30"
+                                                 Spacing="0"
+                                                 IsVisible="False">
+                                <Border WidthRequest="56"
+                                        HeightRequest="56"
+                                        Padding="0"
+                                        BackgroundColor="{StaticResource SuccessBg}"
+                                        StrokeThickness="0"
+                                        HorizontalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="28" />
+                                    </Border.StrokeShape>
+                                    <Path Data="{StaticResource IconCheck}"
+                                          Stroke="{StaticResource SecureGreen}"
+                                          StrokeThickness="2"
+                                          StrokeLineCap="Round"
+                                          StrokeLineJoin="Round"
+                                          Fill="Transparent"
+                                          Aspect="Uniform"
+                                          WidthRequest="24"
+                                          HeightRequest="24"
+                                          HorizontalOptions="Center"
+                                          VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="All consultations complete"
+                                       FontFamily="PlayfairSemiBold"
+                                       FontSize="16"
+                                       TextColor="{StaticResource TextPrimary}"
+                                       HorizontalTextAlignment="Center"
+                                       Margin="0,14,0,0" />
+                                <Label Text="Nothing needs your attention."
+                                       Style="{StaticResource Subtitle}"
+                                       FontSize="13"
+                                       Margin="0,4,0,0" />
+                            </VerticalStackLayout>
+
+                            <!-- Could not check. Never the empty state: claiming
+                                 everything is fine when it is unknown is the one
+                                 wrong answer this card can give. -->
+                            <VerticalStackLayout x:Name="ErrorView"
+                                                 Padding="24,30"
+                                                 Spacing="0"
+                                                 IsVisible="False">
+                                <Border WidthRequest="56"
+                                        HeightRequest="56"
+                                        Padding="0"
+                                        BackgroundColor="{StaticResource TileWarning}"
+                                        StrokeThickness="0"
+                                        HorizontalOptions="Center">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="28" />
+                                    </Border.StrokeShape>
+                                    <Label Text="!"
+                                           FontFamily="PlayfairBold"
+                                           FontSize="26"
+                                           TextColor="{StaticResource InkWarning}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                </Border>
+                                <Label Text="Couldn't check"
+                                       FontFamily="PlayfairSemiBold"
+                                       FontSize="16"
+                                       TextColor="{StaticResource TextPrimary}"
+                                       HorizontalTextAlignment="Center"
+                                       Margin="0,14,0,0" />
+                                <Label x:Name="ErrorDetailLabel"
+                                       Style="{StaticResource Subtitle}"
+                                       FontSize="13"
+                                       Margin="0,4,0,0" />
+                                <Button Text="Try again"
+                                        Style="{StaticResource GhostButton}"
+                                        Clicked="OnTryAgainClicked"
+                                        Margin="0,6,0,0" />
+                            </VerticalStackLayout>
+
+                            <!-- The list -->
+                            <VerticalStackLayout x:Name="RowsHost" Spacing="0" IsVisible="False">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate>
+                                        <VerticalStackLayout Spacing="0">
+
+                                            <!--
+                                                The timestamp sits under the title
+                                                rather than beside it. Side by side
+                                                there is roughly 140px left for the
+                                                title on a phone, and
+                                                "Transcription didn't finish"
+                                                truncates to nonsense.
+                                            -->
+                                            <Grid ColumnDefinitions="48,*,Auto"
+                                                  ColumnSpacing="13"
+                                                  Padding="16,12">
+
+                                                <Border Grid.Column="0"
+                                                        WidthRequest="48"
+                                                        HeightRequest="48"
+                                                        Padding="0"
+                                                        StrokeThickness="0"
+                                                        BackgroundColor="{Binding TileColor}">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="14" />
+                                                    </Border.StrokeShape>
+                                                    <Path Data="{Binding Icon}"
+                                                          Stroke="{Binding InkBrush}"
+                                                          StrokeThickness="1.6"
+                                                          StrokeLineCap="Round"
+                                                          StrokeLineJoin="Round"
+                                                          Fill="Transparent"
+                                                          Aspect="Uniform"
+                                                          WidthRequest="22"
+                                                          HeightRequest="22"
+                                                          HorizontalOptions="Center"
+                                                          VerticalOptions="Center" />
+                                                </Border>
+
+                                                <VerticalStackLayout Grid.Column="1"
+                                                                     Spacing="2"
+                                                                     VerticalOptions="Center">
+                                                    <Label Text="{Binding Title}"
+                                                           Style="{StaticResource RowTitle}"
+                                                           LineBreakMode="TailTruncation" />
+                                                    <Label Text="{Binding TimeText}"
+                                                           Style="{StaticResource RowMeta}" />
+                                                </VerticalStackLayout>
+
+                                                <Border Grid.Column="2"
+                                                        Padding="14,7"
+                                                        BackgroundColor="{StaticResource Surface}"
+                                                        Stroke="{Binding InkBrush}"
+                                                        StrokeThickness="1.2"
+                                                        VerticalOptions="Center">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="9" />
+                                                    </Border.StrokeShape>
+                                                    <Label Text="{Binding ActionText}"
+                                                           FontFamily="InterSemiBold"
+                                                           FontSize="13"
+                                                           TextColor="{Binding InkColor}" />
+                                                </Border>
+
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer
+                                                        Command="{Binding Source={x:Reference Page}, Path=RowCommand}"
+                                                        CommandParameter="{Binding .}" />
+                                                </Grid.GestureRecognizers>
+                                            </Grid>
+
+                                            <BoxView HeightRequest="1"
+                                                     Color="#EFECF5"
+                                                     Margin="77,0,16,0"
+                                                     IsVisible="{Binding ShowDivider}" />
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+
+                            <Label x:Name="CountLabel"
+                                   Style="{StaticResource RowMeta}"
+                                   HorizontalTextAlignment="Center"
+                                   HorizontalOptions="Center"
+                                   Margin="0,14,0,16"
+                                   IsVisible="False" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ========================================= PRIVACY NOTE -->
+
+                    <!--
+                        Same construction as the button: the Border paints the
+                        shape, the content sits over it as a sibling. A Border
+                        clips its children, and this text wraps to two lines, so
+                        the first line was being sliced off along the top edge.
+                    -->
+                    <Grid Margin="0,18,0,0" HeightRequest="64">
+                        <Border BackgroundColor="{StaticResource TileNotice}"
+                                StrokeThickness="0"
+                                InputTransparent="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16" />
+                            </Border.StrokeShape>
+                        </Border>
+
+                        <Grid ColumnDefinitions="Auto,*"
+                              ColumnSpacing="11"
+                              Margin="16,0"
+                              VerticalOptions="Center"
+                              InputTransparent="True">
+                            <Path Grid.Column="0"
+                                  Data="{StaticResource IconShieldCheck}"
+                                  Stroke="{StaticResource BrandPurple}"
+                                  StrokeThickness="1.5"
+                                  StrokeLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  Aspect="Uniform"
+                                  WidthRequest="17"
+                                  HeightRequest="17"
+                                  VerticalOptions="Center" />
+                            <Label Grid.Column="1"
+                                   Text="Recordings are deleted once the note is signed and synced."
+                                   FontFamily="InterRegular"
+                                   FontSize="11.5"
+                                   LineHeight="1.3"
+                                   TextColor="{StaticResource BrandPurple}"
+                                   LineBreakMode="WordWrap"
+                                   MaxLines="2"
+                                   VerticalOptions="Center" />
+                        </Grid>
+                    </Grid>
+
                 </VerticalStackLayout>
-            </Border>
-
-            <Button Text="Sign out"
-                    Style="{StaticResource GhostButton}"
-                    Clicked="OnSignOutClicked"
-                    Margin="0,20,0,0" />
-
-        </VerticalStackLayout>
-    </ScrollView>
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
 </ContentPage>

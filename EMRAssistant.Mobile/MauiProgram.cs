@@ -13,8 +13,9 @@ namespace EMRAssistant.Mobile
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
                 {
-                    // Poppins for display type: geometric and characterful, used
-                    // for headings where personality is wanted.
+                    // Poppins is no longer used by any style. Left registered
+                    // so that anything still naming it renders rather than
+                    // silently falling back to the platform default.
                     fonts.AddFont("Poppins-SemiBold.ttf", "PoppinsSemiBold");
                     fonts.AddFont("Poppins-Bold.ttf", "PoppinsBold");
 
@@ -28,6 +29,17 @@ namespace EMRAssistant.Mobile
                     fonts.AddFont("Inter_18pt-Regular.ttf", "InterRegular");
                     fonts.AddFont("Inter_18pt-Medium.ttf", "InterMedium");
                     fonts.AddFont("Inter_18pt-SemiBold.ttf", "InterSemiBold");
+
+                    // Playfair Display carries every heading in the app.
+                    //
+                    // Four weights are registered because a display serif needs
+                    // them: at a heading's size the difference between Medium
+                    // and SemiBold is visible, and a serif faked into boldness
+                    // by the platform looks smeared rather than heavy.
+                    fonts.AddFont("PlayfairDisplay-Regular.ttf", "PlayfairRegular");
+                    fonts.AddFont("PlayfairDisplay-Medium.ttf", "PlayfairMedium");
+                    fonts.AddFont("PlayfairDisplay-SemiBold.ttf", "PlayfairSemiBold");
+                    fonts.AddFont("PlayfairDisplay-Bold.ttf", "PlayfairBold");
 
                     // Retained: the template registers these and removing them
                     // would break anything still referring to them.
@@ -45,6 +57,13 @@ namespace EMRAssistant.Mobile
             builder.Services.AddTransient<SplashPage>();
             builder.Services.AddTransient<LoginPage>();
             builder.Services.AddTransient<RegisterPage>();
+            builder.Services.AddTransient<RecordPage>();
+
+            // The capture mechanism behind an interface, for the same reason
+            // the backend puts Whisper behind an ASREngine protocol: it is the
+            // part most likely to change. Swapping in live microphone capture
+            // is one class and this one line.
+            builder.Services.AddSingleton<IConsultationRecorder, FilePickerRecorder>();
             builder.Services.AddTransient<HomePage>();
 
 #if DEBUG

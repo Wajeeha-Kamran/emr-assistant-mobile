@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="EMRAssistant.Mobile.Views.RecordPage"
+             x:Name="Page"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource SurfaceMuted}">
+
+    <!--
+        The recording screen. Six states, one layout.
+
+        Header, card, control, privacy note - in that order, always. Only the
+        card's contents and the control below it change, so moving between
+        states never moves the furniture.
+    -->
+
+    <ScrollView>
+        <VerticalStackLayout Padding="0" Spacing="0">
+
+            <!-- ================================================== HEADER -->
+            <!--
+                The artwork is a baked image: the purple field and the glass
+                object were rendered together. A cut-out object on a flat
+                colour loses the refraction that makes glass read as glass,
+                because there is nothing behind it to bend.
+
+                The gradient underneath matches the image's own corners
+                (#742AD8 top right to #100238 bottom left), so if AspectFill
+                crops differently on a wide screen the join is invisible.
+            -->
+            <Grid HeightRequest="252">
+
+                <Border StrokeThickness="0" InputTransparent="True">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                            <GradientStop Color="#742AD8" Offset="0.0" />
+                            <GradientStop Color="#30087C" Offset="0.55" />
+                            <GradientStop Color="#100238" Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="0,0,32,32" />
+                    </Border.StrokeShape>
+                </Border>
+
+                <Border StrokeThickness="0" InputTransparent="True">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="0,0,32,32" />
+                    </Border.StrokeShape>
+                    <Image Source="record_hero.jpg"
+                           Aspect="AspectFill"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill" />
+                </Border>
+
+                <Grid RowDefinitions="Auto,*" Padding="18,16,18,0">
+
+                    <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+
+                        <!-- Back. The only way out of this screen. -->
+                        <Grid Grid.Column="0" WidthRequest="38" HeightRequest="38">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnBackTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border BackgroundColor="#26FFFFFF"
+                                    StrokeThickness="0"
+                                    InputTransparent="True">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="19" />
+                                </Border.StrokeShape>
+                            </Border>
+                            <Path Data="M15,5 L8,12 L15,19 M8,12 L21,12"
+                                  Stroke="White"
+                                  StrokeThickness="1.8"
+                                  StrokeLineCap="Round"
+                                  StrokeLineJoin="Round"
+                                  Fill="Transparent"
+                                  Aspect="Uniform"
+                                  WidthRequest="17"
+                                  HeightRequest="17"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center"
+                                  InputTransparent="True" />
+                        </Grid>
+
+                        <Image Grid.Column="2"
+                               Source="logo_lockup_white.png"
+                               Aspect="AspectFit"
+                               HeightRequest="26"
+                               VerticalOptions="Center" />
+                    </Grid>
+
+                    <VerticalStackLayout Grid.Row="1"
+                                         Spacing="0"
+                                         Margin="0,18,0,0"
+                                         VerticalOptions="Start"
+                                         WidthRequest="215"
+                                         HorizontalOptions="Start">
+                        <Label x:Name="HeaderTitle"
+                               FontFamily="PlayfairBold"
+                               FontSize="26"
+                               LineHeight="1.22"
+                               TextColor="White" />
+                        <Label Text="Record the conversation clearly. A clinical note will be prepared when you finish."
+                               FontFamily="InterRegular"
+                               FontSize="11.5"
+                               LineHeight="1.35"
+                               TextColor="#A6FFFFFF"
+                               Margin="0,10,0,0" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Grid>
+
+            <!-- ==================================================== BODY -->
+
+            <VerticalStackLayout Padding="14,0,14,26"
+                                 Spacing="0"
+                                 MaximumWidthRequest="520"
+                                 HorizontalOptions="Center">
+
+                <!-- =============================================== CARD -->
+                <Grid Margin="0,-40,0,0">
+
+                    <Border BackgroundColor="{StaticResource Surface}"
+                            StrokeThickness="0"
+                            InputTransparent="True">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="26" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="#26241245" Offset="0,10" Radius="24" Opacity="0.6" />
+                        </Border.Shadow>
+                    </Border>
+
+                    <!-- Permission -->
+                    <VerticalStackLayout x:Name="PermissionView"
+                                         Margin="20,26"
+                                         Spacing="0"
+                                         IsVisible="False">
+                        <Border WidthRequest="72" HeightRequest="72" Padding="0"
+                                BackgroundColor="{StaticResource TileAccent}"
+                                StrokeThickness="0" HorizontalOptions="Center">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="36" />
+                            </Border.StrokeShape>
+                            <Path Data="{StaticResource IconMic}"
+                                  Stroke="{StaticResource BrandPurple}"
+                                  StrokeThickness="1.7"
+                                  StrokeLineCap="Round" StrokeLineJoin="Round"
+                                  Fill="Transparent" Aspect="Uniform"
+                                  WidthRequest="30" HeightRequest="30"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Microphone access"
+                               FontFamily="PlayfairSemiBold" FontSize="21"
+                               LineHeight="1.35"
+                               TextColor="{StaticResource TextPrimary}"
+                               HorizontalTextAlignment="Center" Margin="0,14,0,0" />
+                        <Label Text="Auralis MD needs the microphone to record the consultation. Nothing is recorded until you press Start."
+                               Style="{StaticResource Subtitle}" FontSize="12.5" Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+
+                    <!-- Ready / Recording / Approaching the limit -->
+                    <VerticalStackLayout x:Name="TimerView"
+                                         Margin="20,22"
+                                         Spacing="0">
+
+                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="8">
+                            <Ellipse x:Name="StatusDot"
+                                     WidthRequest="9" HeightRequest="9"
+                                     Fill="{StaticResource TextMuted}"
+                                     VerticalOptions="Center" />
+                            <Label x:Name="StatusLabel"
+                                   FontFamily="InterSemiBold" FontSize="12.5"
+                                   CharacterSpacing="2"
+                                   TextColor="{StaticResource TextMuted}"
+                                   VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout HorizontalOptions="Center"
+                                               Spacing="6"
+                                               Margin="0,10,0,0">
+                            <!-- Inter, not Playfair. A display serif renders
+                                 large numerals with heavy stroke contrast, and
+                                 glancing at this number is its entire job. -->
+                            <Label x:Name="TimerLabel"
+                                   FontFamily="InterSemiBold" FontSize="46"
+                                   TextColor="{StaticResource TextPrimary}"
+                                   VerticalOptions="Center" />
+                            <Label x:Name="LimitLabel"
+                                   Text="/ 30:00"
+                                   FontFamily="InterRegular" FontSize="18"
+                                   TextColor="{StaticResource TextMuted}"
+                                   VerticalOptions="End"
+                                   Margin="0,0,0,9" />
+                        </HorizontalStackLayout>
+
+                        <Border x:Name="WaveformHost"
+                                HeightRequest="46" Margin="0,10,0,0"
+                                StrokeThickness="0" BackgroundColor="Transparent">
+                            <Label x:Name="WaveformLabel"
+                                   Text="· · · · · · · · · · · · · · · · · · · · · · · · · · · ·"
+                                   FontSize="15"
+                                   TextColor="{StaticResource BrandPurpleLight}"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalTextAlignment="Center"
+                                   Opacity="0.35" />
+                        </Border>
+
+                        <Label Text="Keep the device close enough to hear both voices, and let each person finish speaking."
+                               Style="{StaticResource Subtitle}"
+                               FontSize="12.5" Margin="0,8,0,0" />
+
+                        <Label x:Name="SelectedFileLabel"
+                               FontFamily="InterMedium" FontSize="12.5"
+                               TextColor="{StaticResource BrandPurple}"
+                               HorizontalTextAlignment="Center"
+                               LineBreakMode="MiddleTruncation"
+                               Margin="0,8,0,0"
+                               IsVisible="False" />
+
+                        <Label x:Name="LimitWarningLabel"
+                               Text="Recording stops automatically at 30:00."
+                               FontFamily="InterMedium" FontSize="12.5"
+                               TextColor="{StaticResource InkWarning}"
+                               HorizontalTextAlignment="Center"
+                               Margin="0,7,0,0"
+                               IsVisible="False" />
+                    </VerticalStackLayout>
+
+                    <!-- Uploading -->
+                    <VerticalStackLayout x:Name="UploadingView"
+                                         Margin="20,26" Spacing="0" IsVisible="False">
+                        <Label Text="Uploading the recording"
+                               FontFamily="PlayfairSemiBold" FontSize="21"
+                               LineHeight="1.35"
+                               TextColor="{StaticResource TextPrimary}"
+                               HorizontalTextAlignment="Center" />
+                        <ProgressBar x:Name="UploadProgress"
+                                     Progress="0"
+                                     ProgressColor="{StaticResource BrandPurple}"
+                                     HeightRequest="8"
+                                     Margin="0,18,0,0" />
+                        <Label x:Name="UploadSizeLabel"
+                               FontFamily="InterSemiBold" FontSize="14"
+                               TextColor="{StaticResource TextPrimary}"
+                               HorizontalTextAlignment="Center" Margin="0,16,0,0" />
+                        <Label x:Name="UploadLengthLabel"
+                               Style="{StaticResource Subtitle}" FontSize="12.5" Margin="0,4,0,0" />
+                        <Label Text="Keep the app open until this finishes."
+                               Style="{StaticResource Subtitle}" FontSize="12.5" Margin="0,4,0,0" />
+                    </VerticalStackLayout>
+
+                    <!-- Upload failed -->
+                    <VerticalStackLayout x:Name="FailedView"
+                                         Margin="20,26" Spacing="0" IsVisible="False">
+                        <Border WidthRequest="72" HeightRequest="72" Padding="0"
+                                BackgroundColor="{StaticResource TileDanger}"
+                                StrokeThickness="0" HorizontalOptions="Center">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="36" />
+                            </Border.StrokeShape>
+                            <Path Data="{StaticResource IconCloudSlash}"
+                                  Stroke="{StaticResource InkDanger}"
+                                  StrokeThickness="1.7"
+                                  StrokeLineCap="Round" StrokeLineJoin="Round"
+                                  Fill="Transparent" Aspect="Uniform"
+                                  WidthRequest="32" HeightRequest="32"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                        </Border>
+                        <Label Text="Upload didn't finish"
+                               FontFamily="PlayfairSemiBold" FontSize="21"
+                               LineHeight="1.35"
+                               TextColor="{StaticResource TextPrimary}"
+                               HorizontalTextAlignment="Center" Margin="0,14,0,0" />
+                        <Label Text="The recording is still on this device. Try again — leaving now will lose it."
+                               Style="{StaticResource Subtitle}" FontSize="12.5" Margin="0,6,0,0" />
+                    </VerticalStackLayout>
+                </Grid>
+
+                <!-- ============================================ CONTROL -->
+
+                <!-- Wide button: Allow microphone / Start recording / Retry upload -->
+                <Grid x:Name="WideButton" Margin="0,20,0,0" HeightRequest="52" IsVisible="False">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnWideButtonTapped" />
+                    </Grid.GestureRecognizers>
+                    <Border StrokeThickness="0"
+                            Background="{StaticResource ButtonGradient}"
+                            InputTransparent="True">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="14" />
+                        </Border.StrokeShape>
+                        <Border.Shadow>
+                            <Shadow Brush="#665B2E9D" Offset="0,6" Radius="14" Opacity="0.55" />
+                        </Border.Shadow>
+                    </Border>
+                    <HorizontalStackLayout HorizontalOptions="Center"
+                                           VerticalOptions="Fill"
+                                           Spacing="11"
+                                           InputTransparent="True">
+                        <Path x:Name="WideButtonIcon"
+                              Data="{StaticResource IconMic}"
+                              Stroke="White" StrokeThickness="1.7"
+                              StrokeLineCap="Round" StrokeLineJoin="Round"
+                              Fill="Transparent" Aspect="Uniform"
+                              WidthRequest="18" HeightRequest="18"
+                              VerticalOptions="Center" />
+                        <Label x:Name="WideButtonLabel"
+                               FontFamily="InterSemiBold" FontSize="15"
+                               TextColor="White"
+                               VerticalOptions="Fill"
+                               VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+                </Grid>
+
+                <!-- Finish. One circle: no pause, and no cancel. -->
+                <VerticalStackLayout x:Name="FinishControl"
+                                     Margin="0,22,0,0"
+                                     Spacing="10"
+                                     IsVisible="False">
+                    <Grid WidthRequest="86" HeightRequest="86" HorizontalOptions="Center">
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnFinishTapped" />
+                        </Grid.GestureRecognizers>
+                        <Border StrokeThickness="0"
+                                Background="{StaticResource ButtonGradient}"
+                                InputTransparent="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="43" />
+                            </Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="#805B2E9D" Offset="0,8" Radius="18" Opacity="0.6" />
+                            </Border.Shadow>
+                        </Border>
+                        <Border WidthRequest="26" HeightRequest="26"
+                                BackgroundColor="White" StrokeThickness="0"
+                                HorizontalOptions="Center" VerticalOptions="Center"
+                                InputTransparent="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="5" />
+                            </Border.StrokeShape>
+                        </Border>
+                    </Grid>
+                    <Label Text="Finish"
+                           FontFamily="InterSemiBold" FontSize="15"
+                           TextColor="{StaticResource TextPrimary}"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+
+                <!-- Quiet destructive action, failure state only -->
+                <Button x:Name="DiscardButton"
+                        Text="Discard recording"
+                        Style="{StaticResource GhostButton}"
+                        TextColor="{StaticResource TextMuted}"
+                        Clicked="OnDiscardClicked"
+                        Margin="0,8,0,0"
+                        IsVisible="False" />
+
+                <!-- ============================================ PRIVACY -->
+
+                <Grid Margin="0,22,0,0" HeightRequest="64">
+                    <Border BackgroundColor="{StaticResource TileNotice}"
+                            StrokeThickness="0" InputTransparent="True">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="16" />
+                        </Border.StrokeShape>
+                    </Border>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="11"
+                          Margin="16,0" VerticalOptions="Center" InputTransparent="True">
+                        <Path Grid.Column="0"
+                              Data="{StaticResource IconShieldCheck}"
+                              Stroke="{StaticResource BrandPurple}" StrokeThickness="1.5"
+                              StrokeLineCap="Round" StrokeLineJoin="Round"
+                              Fill="Transparent" Aspect="Uniform"
+                              WidthRequest="20" HeightRequest="20"
+                              VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="1" VerticalOptions="Center">
+                            <Label Text="Private by design"
+                                   FontFamily="InterSemiBold" FontSize="12.5"
+                                   TextColor="{StaticResource BrandPurple}" />
+                            <Label Text="Recordings are deleted once the note is signed and synced."
+                                   FontFamily="InterRegular" FontSize="11"
+                                   LineHeight="1.3"
+                                   TextColor="{StaticResource BrandPurple}"
+                                   Opacity="0.85"
+                                   LineBreakMode="WordWrap" MaxLines="2" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Grid>
+
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
