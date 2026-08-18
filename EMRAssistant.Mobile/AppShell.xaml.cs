@@ -1,4 +1,4 @@
-﻿using EMRAssistant.Mobile.Views;
+using EMRAssistant.Mobile.Views;
 
 namespace EMRAssistant.Mobile;
 
@@ -14,5 +14,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute(nameof(RecordPage), typeof(RecordPage));
         Routing.RegisterRoute(nameof(ProcessingPage), typeof(ProcessingPage));
         Routing.RegisterRoute(nameof(ReviewPage), typeof(ReviewPage));
+        Routing.RegisterRoute(nameof(CodesPage), typeof(CodesPage));
+        Routing.RegisterRoute(nameof(SignPage), typeof(SignPage));
     }
 }

@@ -39,7 +39,8 @@ public record SoapNote(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("session_id")] int SessionId,
     [property: JsonPropertyName("status")] string Status,
-    [property: JsonPropertyName("sections")] IReadOnlyList<SoapSection> Sections);
+    [property: JsonPropertyName("sections")] IReadOnlyList<SoapSection> Sections,
+    [property: JsonPropertyName("created_at")] DateTimeOffset? CreatedAt = null);
 
 public static class SoapSectionTypes
 {
@@ -80,3 +81,48 @@ public static class SoapNoteStatuses
     public const string Draft = "DRAFT";
     public const string Signed = "SIGNED";
 }
+
+// ---------------------------------------------------------------- codes
+
+public record CodeSuggestion(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("code")] string Code,
+    [property: JsonPropertyName("description")] string Description,
+    [property: JsonPropertyName("code_type")] string CodeType,
+    [property: JsonPropertyName("rank")] int Rank,
+    [property: JsonPropertyName("confidence_score")] double ConfidenceScore,
+    [property: JsonPropertyName("accepted")] bool Accepted);
+
+public static class CodeTypes
+{
+    public const string Icd10 = "ICD10";
+    public const string Cpt = "CPT";
+
+    /// <summary>What the group is called on screen, and where it came from.</summary>
+    public static string Title(string type) => type switch
+    {
+        Icd10 => "Diagnosis \u00b7 ICD-10",
+        Cpt => "Procedures \u00b7 CPT",
+        _ => type,
+    };
+
+    public static string Source(string type) => type switch
+    {
+        Icd10 => "From the Assessment section",
+        Cpt => "From the Plan section",
+        _ => "",
+    };
+}
+
+// ---------------------------------------------------------------- signing
+
+public record Signature(
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("soap_note_id")] int SoapNoteId,
+    [property: JsonPropertyName("doctor_id")] int DoctorId,
+    [property: JsonPropertyName("signed_at")] DateTimeOffset SignedAt,
+    [property: JsonPropertyName("method")] string Method);
+
+// SyncStatuses is not declared here. It already exists in AttentionModels.cs,
+// where the dashboard's attention list needed it first, and the values are the
+// same three the sign screen polls for.

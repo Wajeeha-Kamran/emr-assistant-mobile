@@ -25,7 +25,13 @@ public partial class RecordPage : ContentPage
     }
 
     private readonly ApiClient _api;
-    private readonly IConsultationRecorder _recorder;
+
+    // Two recorders, one screen. _recorder points at whichever the doctor chose
+    // for this consultation; everything below it - the timer, the limit, the
+    // upload - is written against the interface and does not care which.
+    private readonly IConsultationRecorder _live;
+    private readonly FilePickerRecorder _file;
+    private IConsultationRecorder _recorder;
 
     private Stage _stage;
     private IDispatcherTimer? _timer;
@@ -34,11 +40,13 @@ public partial class RecordPage : ContentPage
     private RecordedAudio? _recorded;
     private int? _sessionId;
 
-    public RecordPage(ApiClient api, IConsultationRecorder recorder)
+    public RecordPage(ApiClient api, IConsultationRecorder live, FilePickerRecorder file)
     {
         InitializeComponent();
         _api = api;
-        _recorder = recorder;
+        _live = live;
+        _file = file;
+        _recorder = live;
 
         GoTo(_recorder.NeedsPermission ? Stage.Permission : Stage.Ready);
     }
@@ -47,6 +55,12 @@ public partial class RecordPage : ContentPage
 
     private void GoTo(Stage stage)
     {
+        // Returning to Ready means no choice has been made for this
+        // consultation, so the default comes back with it. Without this, one
+        // cancelled file-picker would leave the screen on the file path for
+        // good.
+        if (stage is Stage.Ready or Stage.Permission) _recorder = _live;
+
         _stage = stage;
 
         // The header heading is not fixed. Two of these states happen before
@@ -71,6 +85,7 @@ public partial class RecordPage : ContentPage
         // with a file in flight.
         WideButton.IsVisible = stage is Stage.Permission or Stage.Ready
                                         or Stage.Selected or Stage.Failed;
+        UploadInsteadButton.IsVisible = stage is Stage.Permission or Stage.Ready;
         WideButtonLabel.Text = stage switch
         {
             Stage.Permission => "Allow microphone",
@@ -113,7 +128,8 @@ public partial class RecordPage : ContentPage
                 else
                     await DisplayAlert("Microphone blocked",
                         "The consultation cannot be recorded without microphone access. " +
-                        "You can grant it in system settings.", "OK");
+                        "You can grant it in system settings, or upload a recording instead.",
+                        "OK");
                 break;
 
             case Stage.Ready:
@@ -244,6 +260,19 @@ public partial class RecordPage : ContentPage
             if (_elapsed >= MaxDuration) _ = FinishAsync();
         };
         _timer.Start();
+    }
+
+    /// <summary>
+    /// Switch this consultation to a supplied file and start straight away. The
+    /// permission stage offers it too - a doctor who has declined the microphone
+    /// should still be able to work.
+    /// </summary>
+    private async void OnUploadInsteadTapped(object sender, EventArgs e)
+    {
+        if (_stage is not (Stage.Permission or Stage.Ready)) return;
+
+        _recorder = _file;
+        await StartRecordingAsync();
     }
 
     private async void OnFinishTapped(object sender, EventArgs e) => await FinishAsync();

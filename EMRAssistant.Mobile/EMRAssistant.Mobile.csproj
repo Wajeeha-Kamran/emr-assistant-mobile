@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net7.0-android;net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
@@ -55,6 +55,20 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
+		<!--
+			Live microphone capture. MAUI has no built-in recorder.
+
+			Pinned to 2.1.0, which is the last release this project can use.
+			Checked against nuget.org: 3.x targets net8.0 and 4.x targets
+			net9.0, while this project targets net7.0 - so neither resolves.
+			2.1.0 targets net6.0, and a .NET 6 package is consumable from a
+			.NET 7 project.
+
+			Moving the project to net8.0 would allow a newer release, and is
+			worth doing eventually since net7.0 is out of support - but it is a
+			change to make deliberately, not in passing.
+		-->
+		<PackageReference Include="Plugin.Maui.Audio" Version="2.1.0" />
 	</ItemGroup>
 
 </Project>

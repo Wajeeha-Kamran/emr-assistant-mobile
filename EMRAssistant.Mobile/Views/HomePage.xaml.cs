@@ -238,15 +238,15 @@ public partial class HomePage : ContentPage
 
         var item = row.Item;
 
-        // Signing needs the note screen, which is not built yet. Say so rather
-        // than failing silently on a tap.
+        // A draft waiting to be signed: open the note. The doctor is sent to the
+        // review screen rather than straight to signing, because the reason this
+        // consultation is on the list is that nobody has looked at the note yet
+        // - and signing is what makes it a record. Review, codes and sign follow
+        // from there.
         if (item.Action == AttentionActions.SignNote)
         {
-            await DisplayAlert(
-                "Not signed",
-                "This consultation has a draft note waiting to be reviewed and signed. " +
-                "The note screen is the next one to be built.",
-                "OK");
+            await Shell.Current.GoToAsync(
+                $"{nameof(ReviewPage)}?sessionId={item.SessionId}");
             return;
         }
 

@@ -314,6 +314,28 @@
                     </HorizontalStackLayout>
                 </Grid>
 
+                <!--
+                    The other way in. Live capture is the default because that
+                    is what UC-01 describes, but a supplied recording is how the
+                    pipeline is tested and how it is demonstrated without
+                    performing a consultation on the spot. Offered on the
+                    permission screen too, so a doctor who declines the
+                    microphone is not stuck.
+                -->
+                <Grid x:Name="UploadInsteadButton" Margin="0,14,0,0"
+                      Padding="18,10" IsVisible="False"
+                      BackgroundColor="Transparent"
+                      HorizontalOptions="Center">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnUploadInsteadTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label Text="Upload a recording instead"
+                           FontFamily="InterSemiBold" FontSize="13"
+                           TextColor="{StaticResource BrandPurple}"
+                           HorizontalOptions="Center"
+                           InputTransparent="True" />
+                </Grid>
+
                 <!-- Finish. One circle: no pause, and no cancel. -->
                 <VerticalStackLayout x:Name="FinishControl"
                                      Margin="0,22,0,0"

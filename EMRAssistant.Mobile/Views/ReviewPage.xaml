@@ -88,10 +88,11 @@
 
                 <!-- ================================================ BODY -->
                 <VerticalStackLayout Padding="14,0,14,20" Spacing="0"
-                                     MaximumWidthRequest="520" HorizontalOptions="Center">
+                                     MaximumWidthRequest="520" HorizontalOptions="Fill">
 
                     <!-- Tabs -->
-                    <Grid Margin="0,-28,0,0" HeightRequest="52" ColumnDefinitions="*,*">
+                    <Grid Margin="0,-28,0,0" HeightRequest="52" ColumnDefinitions="*,*"
+                          HorizontalOptions="Fill">
                         <Border Grid.ColumnSpan="2" BackgroundColor="{StaticResource Surface}"
                                 StrokeThickness="0" InputTransparent="True">
                             <Border.StrokeShape>
@@ -120,12 +121,12 @@
                                 <TapGestureRecognizer Tapped="OnTranscriptTabTapped" />
                             </Grid.GestureRecognizers>
                             <Label x:Name="TranscriptTabLabel" Text="Transcript"
-                                   FontFamily="InterMedium" FontSize="13.5"
+                                   FontFamily="InterSemiBold" FontSize="13.5"
                                    HorizontalOptions="Center" VerticalOptions="Center" />
                             <BoxView x:Name="TranscriptTabRule" HeightRequest="2.5" WidthRequest="72"
                                      Color="{StaticResource BrandPurple}"
                                      HorizontalOptions="Center" VerticalOptions="End"
-                                     Margin="0,0,0,7" IsVisible="False" />
+                                     Margin="0,0,0,7" />
                         </Grid>
                     </Grid>
 

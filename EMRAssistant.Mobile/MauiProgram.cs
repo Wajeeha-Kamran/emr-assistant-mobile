@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using EMRAssistant.Mobile.Services;
 using EMRAssistant.Mobile.Views;
 
@@ -60,12 +60,20 @@ namespace EMRAssistant.Mobile
             builder.Services.AddTransient<RecordPage>();
             builder.Services.AddTransient<ProcessingPage>();
             builder.Services.AddTransient<ReviewPage>();
+            builder.Services.AddTransient<CodesPage>();
+            builder.Services.AddTransient<SignPage>();
 
             // The capture mechanism behind an interface, for the same reason
             // the backend puts Whisper behind an ASREngine protocol: it is the
             // part most likely to change. Swapping in live microphone capture
             // is one class and this one line.
-            builder.Services.AddSingleton<IConsultationRecorder, FilePickerRecorder>();
+            // Two recorders, both registered. The microphone is the default -
+            // it is what UC-01 describes - and the file picker stays available
+            // beside it, because the scripted evidence recordings are how the
+            // pipeline gets exercised and how the system gets demonstrated
+            // without performing a consultation on the spot.
+            builder.Services.AddSingleton<IConsultationRecorder, MicrophoneRecorder>();
+            builder.Services.AddSingleton<FilePickerRecorder>();
             builder.Services.AddTransient<HomePage>();
 
 #if DEBUG

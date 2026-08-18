@@ -102,16 +102,26 @@ public partial class ReviewPage : ContentPage
         SectionsHost.IsVisible = note;
         TranscriptHost.IsVisible = !note;
 
-        NoteTabRule.IsVisible = note;
-        TranscriptTabRule.IsVisible = !note;
+        // Colour, not IsVisible. Hiding a child changes the column's desired
+        // width, both star columns re-measure to their content, and the Border
+        // spanning them collapses with them - which is what shrank the white
+        // tab card the moment either tab was tapped. Recolouring changes
+        // nothing about the layout.
+        var rule = BrandPalette.Color("BrandPurple", BrandPalette.BrandPurpleLight);
+        NoteTabRule.Color = note ? rule : Colors.Transparent;
+        TranscriptTabRule.Color = note ? Colors.Transparent : rule;
 
         var active = BrandPalette.Color("BrandPurple", BrandPalette.BrandPurpleLight);
         var idle = BrandPalette.Color("TextSecondary", "#6B6480");
 
+        // Colour and the underline carry the active state. The font family is
+        // deliberately NOT changed: swapping InterSemiBold for InterMedium
+        // changes the label's measured width, the two-star columns re-measure to
+        // fit their content, and the Border spanning them shrinks with them - so
+        // the white tab card collapsed to half width the first time either tab
+        // was tapped.
         NoteTabLabel.TextColor = note ? active : idle;
-        NoteTabLabel.FontFamily = note ? "InterSemiBold" : "InterMedium";
         TranscriptTabLabel.TextColor = note ? idle : active;
-        TranscriptTabLabel.FontFamily = note ? "InterMedium" : "InterSemiBold";
     }
 
     // -- the note -----------------------------------------------------------
@@ -467,10 +477,11 @@ public partial class ReviewPage : ContentPage
     // -- actions ------------------------------------------------------------
 
     private async void OnContinueTapped(object sender, EventArgs e)
-        => await DisplayAlert("Codes",
-            "The billing codes screen is the next one to be built. The backend is ready: "
-            + "suggestions are generated from the Assessment and Plan sections and can be "
-            + "accepted or rejected.", "OK");
+    {
+        if (_note is null) return;
+        await Shell.Current.GoToAsync(
+            $"{nameof(CodesPage)}?sessionId={Session}&noteId={_note.Id}");
+    }
 
     private async void OnBackTapped(object sender, EventArgs e)
         => await Shell.Current.GoToAsync("//HomePage");

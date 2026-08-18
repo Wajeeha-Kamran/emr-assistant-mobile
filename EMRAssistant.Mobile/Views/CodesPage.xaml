@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:EMRAssistant.Mobile.Controls"
+             x:Class="EMRAssistant.Mobile.Views.CodesPage"
+             x:Name="Page"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource SurfaceMuted}">
+
+    <!--
+        Screen 8. Ranked billing codes, for the doctor to accept or leave.
+
+        UC-08 makes the doctor the decider: the system suggests, it does not
+        choose. Two consequences shape this screen. Nothing arrives accepted,
+        and no similarity score is displayed - the ranking comes from a cosine
+        distance, which is not a confidence, and a number presented as one would
+        be trusted as one.
+
+        The rows are built in the code-behind. Ten near-identical blocks of XAML
+        would drift apart the first time one was edited.
+    -->
+
+    <Grid RowDefinitions="*,Auto">
+
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="0" Spacing="0">
+
+                <!-- ================================================ HEADER -->
+                <Grid HeightRequest="210">
+                    <Border StrokeThickness="0" InputTransparent="True">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="1,0" EndPoint="0,1">
+                                <GradientStop Color="#742AD8" Offset="0.0" />
+                                <GradientStop Color="#30087C" Offset="0.55" />
+                                <GradientStop Color="#100238" Offset="1.0" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="0,0,32,32" />
+                        </Border.StrokeShape>
+                    </Border>
+
+                    <Grid RowDefinitions="Auto,*" Padding="18,16,18,0">
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto">
+                            <Grid Grid.Column="0" WidthRequest="38" HeightRequest="38">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnBackTapped" />
+                                </Grid.GestureRecognizers>
+                                <Border BackgroundColor="#26FFFFFF" StrokeThickness="0" InputTransparent="True">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="19" />
+                                    </Border.StrokeShape>
+                                </Border>
+                                <Path Data="M15,5 L8,12 L15,19 M8,12 L21,12"
+                                      Stroke="White" StrokeThickness="1.8"
+                                      StrokeLineCap="Round" StrokeLineJoin="Round"
+                                      Fill="Transparent" Aspect="Uniform"
+                                      WidthRequest="17" HeightRequest="17"
+                                      HorizontalOptions="Center" VerticalOptions="Center"
+                                      InputTransparent="True" />
+                            </Grid>
+                            <Image Grid.Column="2" Source="logo_lockup_white.png"
+                                   Aspect="AspectFit" HeightRequest="26" VerticalOptions="Center" />
+                        </Grid>
+
+                        <VerticalStackLayout Grid.Row="1" Spacing="0" Margin="0,16,0,0"
+                                             VerticalOptions="Start">
+                            <Label Text="Billing codes"
+                                   FontFamily="PlayfairBold" FontSize="26"
+                                   LineHeight="1.22" TextColor="White" />
+                            <Label x:Name="HeaderMeta"
+                                   Text="Suggested from the note"
+                                   FontFamily="InterRegular" FontSize="12"
+                                   TextColor="#A6FFFFFF" Margin="0,8,0,0" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </Grid>
+
+                <!-- ================================================== BODY -->
+                <VerticalStackLayout Padding="14,0,14,20" Spacing="0"
+                                     MaximumWidthRequest="520" HorizontalOptions="Fill">
+
+                    <!-- The decision-support note. Lavender, matching the
+                         equivalent strips on the transcript and processing
+                         screens. -->
+                    <Grid x:Name="NoticeStrip" Margin="0,-26,0,0">
+                        <Border BackgroundColor="{StaticResource TileNotice}"
+                                StrokeThickness="0" InputTransparent="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="16" />
+                            </Border.StrokeShape>
+                            <Border.Shadow>
+                                <Shadow Brush="#1F241245" Offset="0,6" Radius="16" Opacity="0.5" />
+                            </Border.Shadow>
+                        </Border>
+                        <Label Text="These are suggestions, ranked by how closely they match the note. Accept the ones that apply. Nothing is submitted until you sign."
+                               FontFamily="InterRegular" FontSize="11.5" LineHeight="1.4"
+                               TextColor="{StaticResource BrandPurple}"
+                               Margin="16,14" InputTransparent="True" />
+                    </Grid>
+
+                    <!-- Working -->
+                    <VerticalStackLayout x:Name="LoadingView" Margin="0,44,0,0" Spacing="14"
+                                         IsVisible="False">
+                        <controls:WaveformLoader HorizontalOptions="Center" Scale="0.7" />
+                        <Label x:Name="LoadingLabel" Text="Finding matching codes"
+                               Style="{StaticResource Subtitle}" FontSize="13"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="Comparing the note against the ICD-10 and CPT reference sets."
+                               Style="{StaticResource Subtitle}" FontSize="11.5"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+
+                    <!-- The two groups, built in code -->
+                    <VerticalStackLayout x:Name="GroupsHost" Margin="0,22,0,0"
+                                         Spacing="24" IsVisible="False" />
+
+                    <!-- Nothing to show, or the request failed -->
+                    <VerticalStackLayout x:Name="EmptyView" Margin="0,40,0,0" Spacing="12"
+                                         IsVisible="False">
+                        <Grid WidthRequest="76" HeightRequest="76" HorizontalOptions="Center">
+                            <Border x:Name="EmptyTile" BackgroundColor="{StaticResource TileWarning}"
+                                    StrokeThickness="0" InputTransparent="True">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="38" />
+                                </Border.StrokeShape>
+                            </Border>
+                            <Path x:Name="EmptyIcon"
+                                  Data="{StaticResource IconDocument}"
+                                  Stroke="{StaticResource InkWarning}" StrokeThickness="1.6"
+                                  StrokeLineCap="Round" StrokeLineJoin="Round"
+                                  Fill="Transparent" Aspect="Uniform"
+                                  WidthRequest="32" HeightRequest="32"
+                                  HorizontalOptions="Center" VerticalOptions="Center"
+                                  InputTransparent="True" />
+                        </Grid>
+                        <Label x:Name="EmptyTitle" Text="Codes couldn't be suggested"
+                               FontFamily="PlayfairSemiBold" FontSize="20"
+                               TextColor="{StaticResource TextPrimary}"
+                               HorizontalTextAlignment="Center" />
+                        <Label x:Name="EmptyBody" Text="The note is unaffected and can still be signed."
+                               Style="{StaticResource Subtitle}" FontSize="12.5"
+                               HorizontalTextAlignment="Center" />
+
+                        <Grid x:Name="RetryButton" HeightRequest="52" Margin="0,10,0,0">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnRetryTapped" />
+                            </Grid.GestureRecognizers>
+                            <Border StrokeThickness="0" Background="{StaticResource ButtonGradient}"
+                                    InputTransparent="True">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="14" />
+                                </Border.StrokeShape>
+                            </Border>
+                            <Label Text="Try again" FontFamily="InterSemiBold" FontSize="15"
+                                   TextColor="White" HorizontalOptions="Center"
+                                   VerticalOptions="Center" InputTransparent="True" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!--
+            Pinned, so a ten-row list never hides the way forward. It is never
+            disabled: leaving a code unaccepted is a valid answer, and blocking
+            the button until everything is decided only produces careless taps.
+        -->
+        <Grid Grid.Row="1" Padding="14,8,14,16" RowDefinitions="Auto,Auto" RowSpacing="8"
+              BackgroundColor="{StaticResource SurfaceMuted}">
+            <Label x:Name="CountLabel" Grid.Row="0"
+                   FontFamily="InterMedium" FontSize="11.5"
+                   TextColor="{StaticResource TextMuted}"
+                   HorizontalOptions="Center" />
+
+            <Grid Grid.Row="1" x:Name="ContinueButton" HeightRequest="52">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnContinueTapped" />
+                </Grid.GestureRecognizers>
+                <Border StrokeThickness="0" Background="{StaticResource ButtonGradient}" InputTransparent="True">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="14" />
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="#665B2E9D" Offset="0,6" Radius="14" Opacity="0.55" />
+                    </Border.Shadow>
+                </Border>
+                <Label x:Name="ContinueLabel" Text="Continue to signing"
+                       FontFamily="InterSemiBold" FontSize="15" TextColor="White"
+                       HorizontalOptions="Center" VerticalOptions="Fill"
+                       VerticalTextAlignment="Center" InputTransparent="True" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

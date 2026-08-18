@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -352,6 +352,72 @@ public class ApiClient
         return payload.TryGetProperty("sync_status", out var value) && value.ValueKind == JsonValueKind.String
             ? value.GetString()
             : null;
+    }
+
+    // -- billing codes and signing -----------------------------------------
+
+    /// <summary>
+    /// Ask for code suggestions. Ranked ICD-10 from the Assessment section and
+    /// CPT from the Plan section, five of each.
+    ///
+    /// Slow, like note generation: the matching runs inline rather than in a
+    /// background task, so allow the same 15 to 25 seconds.
+    /// </summary>
+    public async Task<IReadOnlyList<CodeSuggestion>> GenerateCodeSuggestionsAsync(int noteId)
+    {
+        var response = await _http.PostAsync(
+            $"/api/v1/soap-notes/{noteId}/code-suggestions/generate", null);
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<List<CodeSuggestion>>()
+               ?? new List<CodeSuggestion>();
+    }
+
+    /// <summary>The suggestions already produced for a note. Empty before generation.</summary>
+    public async Task<IReadOnlyList<CodeSuggestion>> GetCodeSuggestionsAsync(int noteId)
+    {
+        var response = await _http.GetAsync($"/api/v1/soap-notes/{noteId}/code-suggestions");
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<List<CodeSuggestion>>()
+               ?? new List<CodeSuggestion>();
+    }
+
+    /// <summary>
+    /// Accept or remove one suggestion.
+    ///
+    /// The server stores a plain boolean, so there is no third "not yet looked
+    /// at" state -- a code is accepted or it is not, and only accepted codes go
+    /// with the note. Refused once the note is signed.
+    /// </summary>
+    public async Task<CodeSuggestion> UpdateCodeSuggestionAsync(int noteId, int suggestionId, bool accepted)
+    {
+        var response = await _http.PatchAsJsonAsync(
+            $"/api/v1/soap-notes/{noteId}/code-suggestions/{suggestionId}", new { accepted });
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<CodeSuggestion>()
+               ?? throw new ApiException("The suggestion could not be read.");
+    }
+
+    /// <summary>
+    /// Sign the note. Irreversible.
+    ///
+    /// Three things happen: the note is locked against editing, the session is
+    /// finalised so its audio becomes eligible for deletion, and the push to the
+    /// EMR is queued in the background. The signature returns immediately; the
+    /// sync does not, so poll <see cref="GetSyncStatusAsync"/> afterwards.
+    ///
+    /// A 409 means the note was already signed -- treat that as success and show
+    /// the sync state, not as an error.
+    /// </summary>
+    public async Task<Signature> SignNoteAsync(int noteId)
+    {
+        var response = await _http.PostAsync($"/api/v1/soap-notes/{noteId}/sign", null);
+        await ThrowIfFailedAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<Signature>()
+               ?? throw new ApiException("The signature could not be read.");
     }
 
     // -- shared error handling ---------------------------------------------
