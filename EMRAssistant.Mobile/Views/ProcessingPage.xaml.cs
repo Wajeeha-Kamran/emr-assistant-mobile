@@ -103,6 +103,10 @@ public partial class ProcessingPage : ContentPage
         if (token.IsCancellationRequested) return;
 
         // ---- stage two: the draft ----
+        // Generation is a background job on the server, like transcription
+        // above: the POST only accepts the work. The note it returns has no
+        // sections yet, so navigating on the strength of that response lands
+        // the doctor on an empty note.
         try
         {
             await _api.GenerateSoapNoteAsync(Session);
@@ -111,6 +115,31 @@ public partial class ProcessingPage : ContentPage
         {
             ShowFailure(Failure.Drafting);
             return;
+        }
+
+        while (!token.IsCancellationRequested)
+        {
+            try
+            {
+                var note = await _api.GetSoapNoteAsync(Session);
+
+                if (note.GenerationStatus == GenerationStatuses.Completed) break;
+
+                if (note.GenerationStatus == GenerationStatuses.Failed)
+                {
+                    ShowFailure(Failure.Drafting);
+                    return;
+                }
+            }
+            catch (TaskCanceledException) { return; }
+            catch (Exception)
+            {
+                // A dropped connection is not a failed draft. The server keeps
+                // working either way, and the dashboard can bring the doctor
+                // back to it — so keep polling rather than declaring failure.
+            }
+
+            try { await Task.Delay(PollInterval, token); } catch { return; }
         }
 
         if (token.IsCancellationRequested) return;

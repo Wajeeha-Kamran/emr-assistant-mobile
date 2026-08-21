@@ -259,11 +259,16 @@ public class ApiClient
     }
 
     /// <summary>
-    /// Generate the draft. Returns the note.
+    /// Start generating the draft.
     ///
-    /// Slow: the NLP runs inline rather than in the background, so this request
-    /// can take 15 to 25 seconds. Refused if the transcript is not complete, or
-    /// if the note has already been signed.
+    /// Returns as soon as the job is accepted (202), NOT when the note is
+    /// ready. The note that comes back has GenerationStatus `processing` and an
+    /// empty Sections list — poll <see cref="GetSoapNoteAsync"/> until
+    /// GenerationStatus is `completed` or `failed`, the same way transcription
+    /// is polled. Treating this call's result as the finished note is how the
+    /// doctor ends up looking at an empty note.
+    ///
+    /// Refused if the transcript is not complete, or the note is already signed.
     /// </summary>
     public async Task<SoapNote> GenerateSoapNoteAsync(int sessionId)
     {
@@ -272,6 +277,16 @@ public class ApiClient
 
         return await response.Content.ReadFromJsonAsync<SoapNote>()
                ?? throw new ApiException("The note could not be read.");
+    }
+
+    /// <summary>
+    /// Re-run generation for a note whose draft failed, or was abandoned by a
+    /// server restart. 409 while a job is genuinely still running.
+    /// </summary>
+    public async Task RetrySoapNoteAsync(int sessionId)
+    {
+        var response = await _http.PostAsync($"/api/v1/sessions/{sessionId}/soap-notes/retry", null);
+        await ThrowIfFailedAsync(response);
     }
 
     /// <summary>
@@ -357,20 +372,35 @@ public class ApiClient
     // -- billing codes and signing -----------------------------------------
 
     /// <summary>
-    /// Ask for code suggestions. Ranked ICD-10 from the Assessment section and
-    /// CPT from the Plan section, five of each.
+    /// Start generating code suggestions. Ranked ICD-10 from the Assessment
+    /// section and CPT from the Plan section, five of each.
     ///
-    /// Slow, like note generation: the matching runs inline rather than in a
-    /// background task, so allow the same 15 to 25 seconds.
+    /// Returns as soon as the job is accepted (202) and carries no suggestions.
+    /// Progress lives on the note, not here: poll
+    /// <see cref="GetSoapNoteAsync"/> and read CodesGenerationStatus, then call
+    /// <see cref="GetCodeSuggestionsAsync"/> once it is `completed`.
+    ///
+    /// It has to be that way round. GetCodeSuggestionsAsync returns an empty
+    /// list while the job runs, an empty list if it failed, and an empty list
+    /// when the note genuinely had nothing codable in it — three different
+    /// situations the doctor should be told apart, and the list alone cannot.
     /// </summary>
-    public async Task<IReadOnlyList<CodeSuggestion>> GenerateCodeSuggestionsAsync(int noteId)
+    public async Task GenerateCodeSuggestionsAsync(int noteId)
     {
         var response = await _http.PostAsync(
             $"/api/v1/soap-notes/{noteId}/code-suggestions/generate", null);
         await ThrowIfFailedAsync(response);
+    }
 
-        return await response.Content.ReadFromJsonAsync<List<CodeSuggestion>>()
-               ?? new List<CodeSuggestion>();
+    /// <summary>
+    /// Re-run code suggestion for a note whose job failed or was abandoned.
+    /// 409 while a job is genuinely still running.
+    /// </summary>
+    public async Task RetryCodeSuggestionsAsync(int noteId)
+    {
+        var response = await _http.PostAsync(
+            $"/api/v1/soap-notes/{noteId}/code-suggestions/retry", null);
+        await ThrowIfFailedAsync(response);
     }
 
     /// <summary>The suggestions already produced for a note. Empty before generation.</summary>

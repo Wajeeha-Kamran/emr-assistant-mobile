@@ -36,6 +36,10 @@ public static class AttentionReasons
 {
     public const string TranscriptFailed = "TRANSCRIPT_FAILED";
     public const string TranscriptStalled = "TRANSCRIPT_STALLED";
+    public const string SoapGenerationFailed = "SOAP_GENERATION_FAILED";
+    public const string SoapGenerationStalled = "SOAP_GENERATION_STALLED";
+    public const string CodesGenerationFailed = "CODES_GENERATION_FAILED";
+    public const string CodesGenerationStalled = "CODES_GENERATION_STALLED";
     public const string NoteNotGenerated = "NOTE_NOT_GENERATED";
     public const string NotSigned = "NOT_SIGNED";
     public const string SyncFailed = "SYNC_FAILED";
@@ -50,6 +54,8 @@ public static class AttentionActions
 {
     public const string ResumeTranscription = "RESUME_TRANSCRIPTION";
     public const string GenerateNote = "GENERATE_NOTE";
+    public const string RetrySoapGeneration = "RETRY_SOAP_GENERATION";
+    public const string RetryCodesGeneration = "RETRY_CODES_GENERATION";
     public const string SignNote = "SIGN_NOTE";
     public const string RetrySync = "RETRY_SYNC";
 }

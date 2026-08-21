@@ -40,7 +40,31 @@ public record SoapNote(
     [property: JsonPropertyName("session_id")] int SessionId,
     [property: JsonPropertyName("status")] string Status,
     [property: JsonPropertyName("sections")] IReadOnlyList<SoapSection> Sections,
-    [property: JsonPropertyName("created_at")] DateTimeOffset? CreatedAt = null);
+    [property: JsonPropertyName("created_at")] DateTimeOffset? CreatedAt = null,
+    // Progress, which is a different axis from Status. Status is DRAFT or
+    // SIGNED — where the note is in its life. These say whether the machine has
+    // finished writing it. Sections is empty while GenerationStatus is
+    // processing, so the two must be read together.
+    [property: JsonPropertyName("generation_status")] string GenerationStatus = GenerationStatuses.Completed,
+    [property: JsonPropertyName("generation_error")] string? GenerationError = null,
+    [property: JsonPropertyName("codes_generation_status")] string? CodesGenerationStatus = null,
+    [property: JsonPropertyName("codes_generation_error")] string? CodesGenerationError = null);
+
+/// <summary>
+/// Generation progress, as strings for the same reason every other status here
+/// is a string: an unrecognised value should degrade, not throw.
+///
+/// GenerationStatus defaults to Completed when the field is absent, so a build
+/// of this app pointed at a backend that predates the asynchronous endpoints
+/// behaves exactly as it used to instead of polling forever for a field that
+/// never arrives.
+/// </summary>
+public static class GenerationStatuses
+{
+    public const string Processing = "processing";
+    public const string Completed = "completed";
+    public const string Failed = "failed";
+}
 
 public static class SoapSectionTypes
 {

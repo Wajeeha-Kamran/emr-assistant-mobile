@@ -169,6 +169,14 @@ public partial class HomePage : ContentPage
                 ("Transcription failed", "IconWaveform", "TileWarning", "#FFF0E3", "InkWarning", "#E07B39"),
             AttentionReasons.TranscriptStalled =>
                 ("Transcription didn't finish", "IconWaveformClock", "TileWarning", "#FFF0E3", "InkWarning", "#E07B39"),
+            AttentionReasons.SoapGenerationFailed =>
+                ("Note couldn't be drafted", "IconDocument", "TileWarning", "#FFF0E3", "InkWarning", "#E07B39"),
+            AttentionReasons.SoapGenerationStalled =>
+                ("Drafting didn't finish", "IconDocument", "TileWarning", "#FFF0E3", "InkWarning", "#E07B39"),
+            AttentionReasons.CodesGenerationFailed =>
+                ("Codes couldn't be suggested", "IconDocument", "TileWarning", "#FFF0E3", "InkWarning", "#E07B39"),
+            AttentionReasons.CodesGenerationStalled =>
+                ("Code matching didn't finish", "IconDocument", "TileWarning", "#FFF0E3", "InkWarning", "#E07B39"),
             AttentionReasons.NoteNotGenerated =>
                 ("Note not created", "IconDocument", "TileAccent", "#EDE7FB", "InkAccent", "#5B2E9D"),
             AttentionReasons.NotSigned =>
@@ -186,6 +194,8 @@ public partial class HomePage : ContentPage
         {
             AttentionActions.ResumeTranscription => "Retry",
             AttentionActions.GenerateNote => "Create",
+            AttentionActions.RetrySoapGeneration => "Retry",
+            AttentionActions.RetryCodesGeneration => "Retry",
             AttentionActions.SignNote => "Open",
             AttentionActions.RetrySync => "Retry",
             _ => "Open",
@@ -263,9 +273,26 @@ public partial class HomePage : ContentPage
                     break;
 
                 case AttentionActions.GenerateNote:
-                    await DisplayAlert("Creating the note",
-                        "This runs the language model and can take up to half a minute.", "OK");
+                    // Queued, not done: generation is a background job now, so
+                    // this returns immediately and the result arrives by refresh.
                     await _api.GenerateNoteAsync(item.SessionId);
+                    await DisplayAlert("Creating the note",
+                        "It runs in the background and takes up to half a minute. " +
+                        "Pull down to refresh.", "OK");
+                    break;
+
+                case AttentionActions.RetrySoapGeneration:
+                    await _api.RetrySoapNoteAsync(item.SessionId);
+                    await DisplayAlert("Drafting again",
+                        "It runs in the background and takes up to half a minute. " +
+                        "Pull down to refresh.", "OK");
+                    break;
+
+                case AttentionActions.RetryCodesGeneration:
+                    if (item.NoteId is not { } codesNoteId) break;
+                    await _api.RetryCodeSuggestionsAsync(codesNoteId);
+                    await DisplayAlert("Matching codes again",
+                        "It runs in the background. Pull down to refresh for the result.", "OK");
                     break;
 
                 case AttentionActions.RetrySync:

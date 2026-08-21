@@ -28,6 +28,13 @@ public partial class CodesPage : ContentPage
 {
     private readonly ApiClient _api;
 
+    // Matching runs as a background job on the server. Three seconds matches
+    // the transcript poll on the processing screen; two minutes is well past
+    // the server's own NLP budget, so reaching it means the job is gone rather
+    // than slow.
+    private static readonly TimeSpan CodesPollInterval = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan CodesTimeout = TimeSpan.FromMinutes(2);
+
     private List<CodeSuggestion> _suggestions = new();
     private bool _signed;
 
@@ -51,6 +58,42 @@ public partial class CodesPage : ContentPage
 
     // -- loading ------------------------------------------------------------
 
+    /// <summary>
+    /// Poll the note until code matching stops running. True if it completed,
+    /// false if it failed or ran past the point it could still be working.
+    ///
+    /// The bound matters: without it a job the server abandoned would leave
+    /// this screen spinning forever. Giving up here is not giving up on the
+    /// consultation — the dashboard's attention list still reports it, and
+    /// offers the retry.
+    /// </summary>
+    private async Task<bool> WaitForCodesAsync()
+    {
+        var deadline = DateTime.UtcNow + CodesTimeout;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(CodesPollInterval);
+
+            SoapNote note;
+            try
+            {
+                note = await _api.GetSoapNoteAsync(Session);
+            }
+            catch
+            {
+                // A dropped connection is not a failed job. Keep polling until
+                // the deadline; the work continues on the server regardless.
+                continue;
+            }
+
+            if (note.CodesGenerationStatus == GenerationStatuses.Completed) return true;
+            if (note.CodesGenerationStatus == GenerationStatuses.Failed) return false;
+        }
+
+        return false;
+    }
+
     private async Task LoadAsync()
     {
         ShowWorking("Finding matching codes");
@@ -73,9 +116,30 @@ public partial class CodesPage : ContentPage
 
             // Generating is the slow part, so only do it when there is nothing
             // to show. Re-entering the screen should be instant.
-            _suggestions = existing.Count > 0
-                ? existing.ToList()
-                : (await _api.GenerateCodeSuggestionsAsync(Note)).ToList();
+            if (existing.Count > 0)
+            {
+                _suggestions = existing.ToList();
+            }
+            else
+            {
+                await _api.GenerateCodeSuggestionsAsync(Note);
+
+                // The POST only accepts the job. Progress is reported on the
+                // note, not on the suggestions list, because an empty list
+                // means three different things — still working, failed, or
+                // finished with nothing codable — and the doctor should be
+                // told which.
+                if (!await WaitForCodesAsync())
+                {
+                    ShowEmpty(
+                        title: "Codes couldn't be suggested",
+                        body: "The note is unaffected and can still be signed.",
+                        offerRetry: true);
+                    return;
+                }
+
+                _suggestions = (await _api.GetCodeSuggestionsAsync(Note)).ToList();
+            }
         }
         catch (Exception ex)
         {
