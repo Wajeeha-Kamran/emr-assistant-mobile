@@ -20,6 +20,11 @@ public static class ApiConfig
     // For a PHYSICAL Android device, replace this with the laptop's LAN address
     // printed by run_backend.ps1, and add the firewall rule described in
     // docs/frontend_integration.md. 10.0.2.2 works only for the emulator.
+    //
+    // Note: getting this address right is not sufficient on its own. Android 9
+    // and later block plain HTTP entirely, so AndroidManifest.xml must also set
+    // usesCleartextTraffic. Without it every address fails the same way and the
+    // address looks like the culprit when it is not.
     public const string BaseUrl = "http://10.0.2.2:8000";
 #else
     public const string BaseUrl = "http://127.0.0.1:8000";

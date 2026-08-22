@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true"></application>
+	<!-- usesCleartextTraffic: Android 9 (API 28) and later refuse plain HTTP
+	     outright, whatever the address. Without this the app cannot reach the
+	     backend on 10.0.2.2, on a LAN address, or even on 127.0.0.1 through an
+	     adb tunnel - every request fails identically and it looks like a
+	     network fault rather than a platform policy.
+
+	     This is for development against a local HTTP backend. A real
+	     deployment serves the API over HTTPS, and this attribute is then
+	     removed rather than kept. -->
+	<application android:allowBackup="true" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:usesCleartextTraffic="true"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<!-- Live capture. Without this Android refuses to record even with the
