@@ -1,31 +1,46 @@
 namespace EMRAssistant.Mobile.Services;
 
 /// <summary>
-/// Where the backend lives, per platform.
+/// Where the backend lives.
 ///
-/// This is not one address. "localhost" means "the device I am running on", so
-/// an emulator asking for 127.0.0.1 asks itself, not the laptop. Getting this
-/// wrong produces a connection failure that looks like a bug in the app.
+/// "localhost" means "the device I am running on", so a phone asking for
+/// 127.0.0.1 normally asks itself, not the laptop. The exception is when the
+/// USB cable is carrying that port, which is what adb reverse arranges:
 ///
-///   Windows            127.0.0.1     same machine as the API
-///   Android emulator   10.0.2.2      the emulator's alias for the host machine
-///   Physical phone     LAN address   e.g. 192.168.1.14, same WiFi as the laptop
+///     D:\platform-tools\adb.exe reverse tcp:8000 tcp:8000
 ///
-/// run_backend.ps1 in the backend repository prints the emulator and LAN
-/// addresses when it starts, so they do not have to be looked up each time.
+/// After that, port 8000 on the phone IS port 8000 on the laptop, down the
+/// cable. One address then works for a physical phone, the emulator and
+/// Windows alike, so there is nothing to edit when the target changes.
+///
+/// WHY NOT THE LAN ADDRESS
+/// http://192.168.x.x:8000 also works, and docs/frontend_integration.md in the
+/// backend repository describes it. It needs an inbound firewall rule, both
+/// devices on the same WiFi, and a new address every time the network changes
+/// -- three things that can fail in a room on the day of a demonstration. A
+/// cable cannot be on the wrong network. If the cable is ever unavailable,
+/// that route is still there: put the laptop's LAN address here instead and
+/// add the firewall rule.
+///
+/// ADB REVERSE IS NOT PERMANENT. It is cleared when the cable is unplugged,
+/// the phone reboots, or the adb server restarts. Re-run the one command;
+/// nothing else needs redoing. If the app suddenly cannot reach the backend
+/// and nothing else changed, this is the first thing to check:
+///
+///     D:\platform-tools\adb.exe reverse --list
+///
+/// WITHOUT ADB REVERSE, on the emulator only, the address is 10.0.2.2:8000 --
+/// the emulator's built-in alias for its host machine. It means nothing to a
+/// real phone, which is why this file no longer uses it.
+///
+/// Android also refuses plain HTTP unless AndroidManifest.xml sets
+/// usesCleartextTraffic, which it does. Without that every address fails
+/// identically and the address looks like the culprit when it is not.
 /// </summary>
 public static class ApiConfig
 {
 #if ANDROID
-    // For a PHYSICAL Android device, replace this with the laptop's LAN address
-    // printed by run_backend.ps1, and add the firewall rule described in
-    // docs/frontend_integration.md. 10.0.2.2 works only for the emulator.
-    //
-    // Note: getting this address right is not sufficient on its own. Android 9
-    // and later block plain HTTP entirely, so AndroidManifest.xml must also set
-    // usesCleartextTraffic. Without it every address fails the same way and the
-    // address looks like the culprit when it is not.
-    public const string BaseUrl = "http://10.0.2.2:8000";
+    public const string BaseUrl = "http://127.0.0.1:8000";
 #else
     public const string BaseUrl = "http://127.0.0.1:8000";
 #endif
